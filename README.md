@@ -1,0 +1,2 @@
+# shushu
+novel reader app
