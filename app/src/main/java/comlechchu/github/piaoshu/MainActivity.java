@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<NovelInfo> searchResult = new ArrayList<NovelInfo>();
     Elements title;
 
+    ProgressDialog loadingDialog;
+
     EditText bookkeyEdit;
 
     RecyclerView searchResultList;
@@ -61,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE){
                     bookKeyWord = bookkeyEdit.getText().toString();
+
+                    loadingDialog = new ProgressDialog(MainActivity.this);
+                    loadingDialog.setMessage("努力加載中");
+                    loadingDialog.show();
+
                     new Thread(getSearchResult).start();
                     if(searchResultList.getVisibility()!=View.VISIBLE)
                         searchResultList.setVisibility(View.VISIBLE);
@@ -138,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
 
             try {
+
                 long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
                 //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
@@ -146,13 +155,13 @@ public class MainActivity extends AppCompatActivity {
 
 
                 t1 = System.currentTimeMillis();
-
+/*
                 OkHttpClient okHttp = new OkHttpClient();
                 Request request = new Request.Builder().url("https://tw.ttkan.co/novel/search?q="+bookKeyWord).get().build();
                 Document doc = Jsoup.parse(okHttp.newCall(request).execute().body().string());
+*/
 
-
-//                Document doc = Jsoup.connect("https://tw.ttkan.co/novel/search?q=\"+bookKeyWord").ignoreContentType(true).get();
+                Document doc = Jsoup.connect("https://tw.ttkan.co/novel/search?q="+bookKeyWord).ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println("get load page: "+(t2-t1));
 
@@ -359,6 +368,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (msg.what) {
                     case 0:
                         searchResultList.setAdapter(SAdapter);
+                        loadingDialog.dismiss();
                         break;
                     case 1:
                         bookkeyEdit.setText("");
