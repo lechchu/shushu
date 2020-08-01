@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">舒書</string>
+    <string name="tabitem_myfav">我的書</string>
+    <string name="tabitem_search">其他書</string>
+</resources>

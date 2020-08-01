@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <TextView
+        android:id="@+id/chapternameView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="15sp"
+        android:textColor="@color/cardview_light_background"/>
+
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        android:id="@+id/loadLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srlAccentColor="#00000000"
+        app:srlPrimaryColor="#00000000"
+        app:srlEnablePreviewInEditMode="true">
+
+        <com.scwang.smart.refresh.header.ClassicsHeader
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content" />
+
+
+    <ScrollView
+        android:id="@+id/storyscroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10sp"
+                android:layout_marginRight="10sp"
+                android:visibility="invisible"
+                android:text="storyText"
+                android:textSize="24sp"/>
+
+        </LinearLayout>
+    </ScrollView>
+    <com.scwang.smart.refresh.footer.ClassicsFooter
+        android:layout_width = "match_parent"
+        android:layout_height = "wrap_content" />
+
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+</RelativeLayout>
+
