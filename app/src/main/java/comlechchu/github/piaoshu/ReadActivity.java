@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Message;
 import android.text.method.MovementMethod;
@@ -26,6 +27,7 @@ import android.widget.Adapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -104,7 +106,7 @@ public class ReadActivity extends AppCompatActivity {
 //UI
 
 
-    View setting_layout;
+    View setting_layout,story_layout;
 
     SmartRefreshLayout switchChapter;
     TextView tv1, temptxt, chapterName, txtsizeView;
@@ -169,6 +171,7 @@ public class ReadActivity extends AppCompatActivity {
 
 
         storyScrollView = (ScrollView)findViewById(R.id.storyscroll);
+        story_layout = (RelativeLayout)findViewById(R.id.story_layout);
 
         chapterListView = (NavigationView)findViewById(R.id.chapterlist_navigation_view);
         settingView = (NavigationView)findViewById(R.id.setting_navigation_view);
@@ -294,15 +297,19 @@ public class ReadActivity extends AppCompatActivity {
         });
 
         darkmodeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @SuppressLint("ResourceAsColor")
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
                     storyScrollView.setBackgroundColor(Color.parseColor("#2C3E50"));
 
-                    tv1.setTextColor(Color.parseColor("#EAECEE"));
+                    //story_layout.setBackground(new ColorDrawable(R.color.colorDarkBack));
+                    tv1.setTextColor(R.color.colorTextWhite);
                 }else {
                     storyScrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
-                    tv1.setTextColor( getResources().getColor(android.R.color.secondary_text_light));
+                    //story_layout.setBackground(new ColorDrawable(R.color.colorPureWhite));
+
+                    tv1.setTextColor(android.R.color.secondary_text_light);
                 }
                 }
 

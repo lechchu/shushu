@@ -31,6 +31,7 @@
             android:gravity="center"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:textColor="@color/colorTextWhite"
             android:layout_below="@id/fav_bookcoverIV" />
     </RelativeLayout>>
 
