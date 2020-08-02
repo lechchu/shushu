@@ -160,9 +160,6 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.descText.setText(bookData.getDesc());
         holder.resultDetailLayout.setVisibility(bookData.isExpanded()?View.VISIBLE:View.GONE);
 
-
-
-
     }
 
 

@@ -37,57 +37,20 @@
         android:layout_marginTop="16dp"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText" />
-
-<!--
-    <com.google.android.material.tabs.TabLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:tabGravity="fill"
-
-        tools:ignore="MissingConstraints">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tabitem_myfav" >
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/favoriteBooksView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-
-                android:background="#FFFFFF" />
-        </com.google.android.material.tabs.TabItem>
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/tabitem_search" >
-
-            <EditText
-                android:id="@+id/BookKeyeditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10sp"
-                android:ems="10"
-                android:hint="小說關鍵字"
-                android:imeOptions="actionDone"
-                android:inputType="text"
-                android:singleLine="true"
-                tools:ignore="MissingConstraints" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/searchResultView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText" />
-
-        </com.google.android.material.tabs.TabItem>
+        app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText" >
 
 
-    </com.google.android.material.tabs.TabLayout>
-    -->
 
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+
+        app:adSize="BANNER"
+        app:adUnitId="ca-app-pub-3049736794394736/1179253178"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="MissingConstraints" />
 </androidx.constraintlayout.widget.ConstraintLayout>

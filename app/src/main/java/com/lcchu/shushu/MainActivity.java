@@ -20,6 +20,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -46,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView searchResultList;
     RecyclerView favoriteBooksList;
+
+    private AdView ad;
 
     SearchAdapter SAdapter;
     FavoriteAdapter FAdapter;
@@ -88,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
     public void initView() {
         bookkeyEdit = findViewById(R.id.BookKeyeditText);
 
+        ad = findViewById(R.id.adView);
+
         searchResultList = findViewById(R.id.searchResultView);
         searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
         favoriteBooksList = findViewById(R.id.favoriteBooksView);
@@ -104,9 +114,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+
         initView();
         setupListener();
         loadFavBooksJson();
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+        ad.loadAd(adRequest);
         //new Thread(getSearchResult).start();
     }
 
@@ -155,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
             try {
 
                 long t1,t2;
-                uiUpdateHandler.sendEmptyMessage(1);
+                //uiUpdateHandler.sendEmptyMessage(1);
                 //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
                 //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
                 bookKeyWord = java.net.URLEncoder.encode(bookKeyWord,"UTF-8");
@@ -200,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             SAdapter = new SearchAdapter(searchResult);
@@ -353,7 +372,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // TODO Auto-generated method stub
 
         if (keyCode == KeyEvent.KEYCODE_BACK) { // 攔截返回鍵
             if (searchResultList.getVisibility() == View.VISIBLE){

@@ -47,6 +47,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
@@ -297,19 +298,11 @@ public class ReadActivity extends AppCompatActivity {
         chapterListViewR.addOnItemTouchListener(new RecyclerItemClickListener(this, chapterListViewR ,new RecyclerItemClickListener.OnItemClickListener() {
             @Override public void onItemClick(View view, int position) {
 
-
-                //Toast.makeText(MainActivity.this,String.valueOf(view),Toast.LENGTH_LONG).show();
-                //關側滑
                 scorllHistory = 0;
                 chapterListDrawer.closeDrawer(GravityCompat.START);
                 currentIndex = position;
                 book.updateChapter(chapterList.get(currentIndex).get(1));
                 new Thread(getStory).start();
-                CAdapter.notifyDataSetChanged();
-
-                //TODO seleted item highlighted
-
-
 
             }
 
@@ -477,9 +470,6 @@ public class ReadActivity extends AppCompatActivity {
                     t2=System.currentTimeMillis();
                     System.out.println("load chapter time:"+(t2-t1));
 
-                    //chapterMenu = chapterListView.getMenu();
-
-
 
                     CAdapter = new ChapterListAdapter(chapterList,currentIndex);
                     CAdapter.setItemClickListener(new ChapterListAdapter.OnRecyclerViewClickListener() {
@@ -510,9 +500,9 @@ public class ReadActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                InputStream in = new java.net.URL(book.getCoverURL()).openStream();
-                cover = BitmapFactory.decodeStream(in);
-                handler.sendEmptyMessage(2);
+
+                Glide.with(ReadActivity.this).load(book.getCoverURL()).into(bookCover);
+                //handler.sendEmptyMessage(2);
             }catch (Exception e){e.printStackTrace();}
         }
     };

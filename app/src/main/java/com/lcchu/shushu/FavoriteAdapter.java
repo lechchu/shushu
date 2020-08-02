@@ -159,9 +159,6 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
 
         //holder.resultDetailLayout.setVisibility(bookData.isExpanded()?View.VISIBLE:View.GONE);
 
-
-
-
     }
 
 
