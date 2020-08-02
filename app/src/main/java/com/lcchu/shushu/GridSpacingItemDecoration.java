@@ -1,4 +1,4 @@
-package comlechchu.github.piaoshu;
+package com.lcchu.shushu;
 
 import android.graphics.Rect;
 import android.view.View;

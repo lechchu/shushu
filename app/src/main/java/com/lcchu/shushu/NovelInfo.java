@@ -1,4 +1,4 @@
-package comlechchu.github.piaoshu;
+package com.lcchu.shushu;
 
 public class NovelInfo {
     private String name;

@@ -1,4 +1,4 @@
-package comlechchu.github.piaoshu;
+package com.lcchu.shushu;
 
 import android.app.Activity;
 import android.content.Context;
