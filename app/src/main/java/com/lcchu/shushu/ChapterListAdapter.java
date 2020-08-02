@@ -10,12 +10,12 @@ import java.util.ArrayList;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.ViewHolder> {
 
     private ArrayList<ArrayList<String>> mData;
     private int selectedItem;
 
-    MyAdapter(ArrayList<ArrayList<String>> data) {
+    ChapterListAdapter(ArrayList<ArrayList<String>> data) {
 
         mData = data;
     }

@@ -83,7 +83,7 @@ public class ReadActivity extends AppCompatActivity {
     BookData book;
 
 
-    MyAdapter mAdapter;
+    ChapterListAdapter CAdapter;
 
     ArrayList<ArrayList<String>> chapterList = new ArrayList<ArrayList<String>>();
     ArrayList<String> chapterData = new ArrayList<String>();
@@ -474,7 +474,7 @@ t1=System.currentTimeMillis();
 
 
 
-                    mAdapter = new MyAdapter(chapterList);
+                    CAdapter = new ChapterListAdapter(chapterList);
 
 
                 }catch (Exception e){e.printStackTrace();}
@@ -551,7 +551,7 @@ t1=System.currentTimeMillis();
 
                         break;
                     case 1:
-                        chapterListViewR.setAdapter(mAdapter);
+                        chapterListViewR.setAdapter(CAdapter);
                         break;
                     case 2:
                         //bookCover.setImageBitmap(cover);
