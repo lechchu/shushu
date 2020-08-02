@@ -62,13 +62,13 @@ public class MainActivity extends AppCompatActivity {
         bookkeyEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_SEARCH){
+                if(actionId == EditorInfo.IME_ACTION_SEARCH&& !bookkeyEdit.getText().toString().equals("")){
                     bookKeyWord = bookkeyEdit.getText().toString();
 
 
                     //hide ime after enter
                     InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                    imm.hideSoftInputFromWindow(Objects.requireNonNull(getCurrentFocus()).getWindowToken(), 0);
                     bookkeyEdit.clearFocus();
 
                     loadingDialog = new ProgressDialog(MainActivity.this);
@@ -76,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
                     loadingDialog.show();
 
                     new Thread(getSearchResult).start();
+                    //new Thread(getRank).start();
+                    //new Thread(getAll).start();
                     if(searchResultList.getVisibility()!=View.VISIBLE)
                         searchResultList.setVisibility(View.VISIBLE);
                     if(favoriteBooksList.getVisibility()==View.VISIBLE)
@@ -216,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
+                searchResult = new ArrayList<NovelInfo>();
                 //TODO 抓排行榜
                 long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
@@ -226,8 +229,8 @@ public class MainActivity extends AppCompatActivity {
 
                 t1 = System.currentTimeMillis();
 
-                String rankURL = "https://tw.ttkan.co/novel/rank";
-                String rankType = "";
+                String rankURL = "https://tw.ttkan.co/novel/rank/";
+                String rankType = "xuanhuan";
                 /*
                 type
                 xuanhuan 玄幻
@@ -265,7 +268,8 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case 2:
                             //類別
-                            ni.setDesc(result.text());
+                            Document desdoc = Jsoup.connect("https://tw.ttkan.co/novel/chapters/"+ni.getName()).ignoreContentType(true).get();
+                            ni.setDesc("簡介: "+desdoc.select(".description").text());
 
                             break;
                         case 3:
@@ -278,6 +282,8 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                 }
+                SAdapter = new SearchAdapter(searchResult);
+                uiUpdateHandler.sendEmptyMessage(0);
             }catch (Exception e){e.printStackTrace();}
         }
     };
