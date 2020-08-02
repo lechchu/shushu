@@ -287,15 +287,15 @@ public class ReadActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked) {
-                    storyScrollView.setBackgroundColor(Color.parseColor("#2C3E50"));
+                    //storyScrollView.setBackgroundColor(Color.parseColor("#2C3E50"));
 
-                    //story_layout.setBackground(new ColorDrawable(R.color.colorDarkBack));
-                    tv1.setTextColor(R.color.colorTextWhite);
+                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#2C3E50")));
+                    tv1.setTextColor(Color.parseColor("#EAECEE"));
                 }else {
-                    storyScrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
-                    //story_layout.setBackground(new ColorDrawable(R.color.colorPureWhite));
+                    //storyScrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#FFFFFF")));
 
-                    tv1.setTextColor(android.R.color.secondary_text_light);
+                    tv1.setTextColor(Color.parseColor("#666666"));
                 }
                 }
 

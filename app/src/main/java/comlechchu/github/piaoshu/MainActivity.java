@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         searchResultList = (RecyclerView)findViewById(R.id.searchResultView);
         searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
         favoriteBooksList = (RecyclerView)findViewById(R.id.favoriteBooksView);
-        favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.HORIZONTAL));
+        //favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.HORIZONTAL));
         favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
         favoriteBooksList.setLayoutManager(new GridLayoutManager(this, 2));
 

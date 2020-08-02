@@ -116,9 +116,10 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
                                     fos.write(doneJO.toString().getBytes());
                                     fos.close();
 
-                                    //TODO update favbooks dataset
+
                                     bookDatas.remove(getAdapterPosition());
                                     notifyDataSetChanged();
+                                    Toast.makeText(v.getContext(),"刪除成功",Toast.LENGTH_SHORT).show();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
