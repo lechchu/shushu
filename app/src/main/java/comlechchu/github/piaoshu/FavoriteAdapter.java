@@ -115,7 +115,10 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
                                     FileOutputStream fos = v.getContext().openFileOutput("favBooksInfo.json", Context.MODE_PRIVATE);
                                     fos.write(doneJO.toString().getBytes());
                                     fos.close();
-                                    //notifyDataSetChanged();
+
+                                    //TODO update favbooks dataset
+                                    bookDatas.remove(getAdapterPosition());
+                                    notifyDataSetChanged();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -133,7 +136,7 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
                     dialog.show();
 
 
-                    return false;
+                    return true;
                 }
             });
 
