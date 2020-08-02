@@ -64,11 +64,12 @@ public class MainActivity extends AppCompatActivity {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_SEARCH){
                     bookKeyWord = bookkeyEdit.getText().toString();
-                    bookkeyEdit.clearFocus();
+
 
                     //hide ime after enter
                     InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                    bookkeyEdit.clearFocus();
 
                     loadingDialog = new ProgressDialog(MainActivity.this);
                     loadingDialog.setMessage("努力加載中");
@@ -94,8 +95,8 @@ public class MainActivity extends AppCompatActivity {
         searchResultList = (RecyclerView)findViewById(R.id.searchResultView);
         searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
         favoriteBooksList = (RecyclerView)findViewById(R.id.favoriteBooksView);
-        //favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.HORIZONTAL));
-        favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
+        favoriteBooksList.addItemDecoration(new GridSpacingItemDecoration(2, 50, false));
+
         favoriteBooksList.setLayoutManager(new GridLayoutManager(this, 2));
 
 
