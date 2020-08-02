@@ -72,7 +72,7 @@ import javax.net.ssl.X509TrustManager;
 public class ReadActivity extends AppCompatActivity {
 
     String bookName;
-    //search url https://tw.ttkan.co/novel/search?q="
+
     int currentIndex = 0;
     int scorllHistory = 0;
     int textSize = 24;
@@ -84,8 +84,8 @@ public class ReadActivity extends AppCompatActivity {
 
     ChapterListAdapter CAdapter;
 
-    ArrayList<ArrayList<String>> chapterList = new ArrayList<ArrayList<String>>();
-    ArrayList<String> chapterData = new ArrayList<String>();
+    ArrayList<ArrayList<String>> chapterList = new ArrayList<>();
+    ArrayList<String> chapterData = new ArrayList<>();
 
     Thread chapterLoad, stroyRead;
 
@@ -292,6 +292,7 @@ public class ReadActivity extends AppCompatActivity {
 
 
         });
+        /*
 
         chapterListViewR.addOnItemTouchListener(new RecyclerItemClickListener(this, chapterListViewR ,new RecyclerItemClickListener.OnItemClickListener() {
             @Override public void onItemClick(View view, int position) {
@@ -304,17 +305,22 @@ public class ReadActivity extends AppCompatActivity {
                 currentIndex = position;
                 book.updateChapter(chapterList.get(currentIndex).get(1));
                 new Thread(getStory).start();
+                CAdapter.notifyDataSetChanged();
 
-                /*
-                TextView tempTxt = (TextView) findViewById((int) chapterListViewR.getChildItemId(view));
-                tempTxt.setTextColor(Color.parseColor("#FF0000"));
-*/
+                //TODO seleted item highlighted
+
+
+
             }
 
             @Override public void onLongItemClick(View view, int position) {
                 // do whatever
             }
         }));
+
+
+
+         */
 
 
     }
@@ -431,7 +437,6 @@ public class ReadActivity extends AppCompatActivity {
                 title = doc.select("p");
                 //saveHistory();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             System.out.println("start send story message");
@@ -476,7 +481,23 @@ public class ReadActivity extends AppCompatActivity {
 
 
 
-                    CAdapter = new ChapterListAdapter(chapterList);
+                    CAdapter = new ChapterListAdapter(chapterList,currentIndex);
+                    CAdapter.setItemClickListener(new ChapterListAdapter.OnRecyclerViewClickListener() {
+                        @Override
+                        public void onItemClickListener(View view) {
+                            scorllHistory = 0;
+                            chapterListDrawer.closeDrawer(GravityCompat.START);
+                            currentIndex = chapterListViewR.getChildAdapterPosition(view);
+                            book.updateChapter(chapterList.get(currentIndex).get(1));
+                            new Thread(getStory).start();
+                            CAdapter.updateIndex(currentIndex);
+                        }
+
+                        @Override
+                        public void onItemLongClickListener(View view) {
+
+                        }
+                    });
 
 
                 }catch (Exception e){e.printStackTrace();}

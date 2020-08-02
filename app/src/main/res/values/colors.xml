@@ -6,4 +6,5 @@
     <color name="colorTextWhite">#EAECEE</color>
     <color name="colorDarkBack">#2C3E50</color>
     <color name="colorPureWhite">#FFFFFF</color>
+    <color name="colorTextDefault">#757575</color>
 </resources>

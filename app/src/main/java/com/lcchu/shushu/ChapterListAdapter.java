@@ -5,44 +5,77 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.ViewHolder> {
 
     private ArrayList<ArrayList<String>> mData;
-    private int selectedItem;
 
-    ChapterListAdapter(ArrayList<ArrayList<String>> data) {
+    private int selectedItemIndex;
+
+    private OnRecyclerViewClickListener listener;
+
+    ChapterListAdapter(ArrayList<ArrayList<String>> data, int index) {
 
         mData = data;
+        selectedItemIndex = index;
     }
 
     // 建立ViewHolder
     class ViewHolder extends RecyclerView.ViewHolder{
+
         // 宣告元件
         private TextView txtItem;
 
         ViewHolder(View itemView) {
             super(itemView);
-            txtItem = (TextView) itemView.findViewById(R.id.txtItem);
-
-            txtItem.setOnClickListener(new View.OnClickListener() {
+            txtItem = itemView.findViewById(R.id.txtItem);
+/*
+            itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    txtItem.setTextColor(Color.parseColor("#FF0000"));
+                    System.out.println("clicked text");
+                    //holder.txtItem.setTextColor(Color.parseColor("#008577"));
+
+                    //txtItem.setBackgroundColor(Color.parseColor("#ffffff"));
+
+                    selectedItemIndex=getAdapterPosition();
+                    notifyDataSetChanged();
                 }
             });
+
+ */
         }
     }
 
+    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // 連結項目布局檔list_item
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.chpaterlist_item_view, parent, false);
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onItemClickListener(v);
+            }
+        });
+
+        view.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                listener.onItemLongClickListener(v);
+                return true;
+            }
+        });
+
         return new ViewHolder(view);
     }
 
@@ -50,26 +83,27 @@ public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.
     public void onBindViewHolder(final ViewHolder holder, final int position) {
 
         //TODO 速度太慢
-        // 設置txtItem要顯示的內容
+
         holder.txtItem.setText(mData.get(position).get(0));
+        if(position==selectedItemIndex)
+            holder.txtItem.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
+        else
+            holder.txtItem.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorTextDefault));
 
-        if (selectedItem == position) {
-            //holder.txtItem.setTextColor(Color.parseColor("#ff0000"));
-        }
+    }
 
+    public void updateIndex(int index){
+        selectedItemIndex = index;
+        notifyDataSetChanged();
+    }
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    public void setItemClickListener(OnRecyclerViewClickListener itemClickListener) {
+        listener = itemClickListener;
+    }
 
-                int previousItem = selectedItem;
-                selectedItem = position;
-
-                notifyItemChanged(previousItem);
-                notifyItemChanged(position);
-            }
-        });
-
+    public interface OnRecyclerViewClickListener {
+        void onItemClickListener(View view);
+        void onItemLongClickListener(View view);
     }
 
     @Override
