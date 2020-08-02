@@ -2,7 +2,6 @@ package comlechchu.github.piaoshu;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -28,12 +27,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
@@ -41,10 +37,8 @@ import androidx.recyclerview.widget.RecyclerView;
 public class MainActivity extends AppCompatActivity {
 
     String bookKeyWord = "";
-    //ArrayList<ArrayList<String>> searchResult = new ArrayList<ArrayList<String>>();
-    ArrayList<String> searchResultData = new ArrayList<String>();
-    ArrayList<NovelInfo> searchResult = new ArrayList<NovelInfo>();
-    Elements title;
+
+    ArrayList<NovelInfo> searchResult = new ArrayList<>();
 
     ProgressDialog loadingDialog;
 
@@ -92,11 +86,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initView() {
-        bookkeyEdit = (EditText) findViewById(R.id.BookKeyeditText);
+        bookkeyEdit = findViewById(R.id.BookKeyeditText);
 
-        searchResultList = (RecyclerView)findViewById(R.id.searchResultView);
+        searchResultList = findViewById(R.id.searchResultView);
         searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
-        favoriteBooksList = (RecyclerView)findViewById(R.id.favoriteBooksView);
+        favoriteBooksList = findViewById(R.id.favoriteBooksView);
         favoriteBooksList.addItemDecoration(new GridSpacingItemDecoration(2, 50, false));
 
         favoriteBooksList.setLayoutManager(new GridLayoutManager(this, 2));
@@ -121,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         //String json = "{\"books\":[{\"name\":\"xianwujinyong-chuqiao\",\"title\":\"仙武金庸\",\"cover_url\":\"https://static.ttkan.co/cover/xianwujinyong-chuqiao.jpg\"},{\"name\":\"xiaoaojianghu-jinyong\",\"title\":\"笑傲江湖\",\"cover_url\":\"https://static.ttkan.co/cover/xiaoaojianghu.jpg\"}]}";
         String json;
 
-        ArrayList<NovelInfo> favBooks = new ArrayList<NovelInfo>();
+        ArrayList<NovelInfo> favBooks = new ArrayList<>();
         File favFile = getBaseContext().getFileStreamPath("favBooksInfo.json");
         if(favFile.exists()) {
             try {
