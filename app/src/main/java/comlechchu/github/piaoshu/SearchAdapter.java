@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,10 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder> {
 
     private ArrayList<NovelInfo> bookDatas;
-    private NovelInfo bookData;
-    private String bFName;
-    private int selectedItem;
-    Bitmap coverBmp;
+
 
     SearchAdapter(ArrayList<NovelInfo> data) {
 
@@ -45,18 +43,18 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         // 宣告元件
         private TextView titleText, authorText, descText;
         private ImageView coverImange;
-        private CardView novelView;
+
         private ConstraintLayout resultDetailLayout;
-        private Button readBtn, addFavBtn;
+
 
         ViewHolder(View itemView) {
             super(itemView);
-
+            Button readBtn, addFavBtn;
             titleText = (TextView) itemView.findViewById(R.id.booknameTV);
             authorText = (TextView) itemView.findViewById(R.id.bookauthorTV);
             descText = (TextView) itemView.findViewById(R.id.bookdescTV);
             coverImange = (ImageView) itemView.findViewById(R.id.bookcoverIV);
-            novelView = (CardView)itemView.findViewById(R.id.novelCV);
+
             resultDetailLayout = (ConstraintLayout)itemView.findViewById(R.id.expandlayout);
             readBtn = (Button)itemView.findViewById(R.id.startreadBtn);
             addFavBtn = (Button)itemView.findViewById(R.id.addfavoriteBtn);
@@ -145,6 +143,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         }
     }
 
+    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // 連結項目布局檔list_item
@@ -156,7 +155,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-        bookData = bookDatas.get(position);
+        NovelInfo bookData = bookDatas.get(position);
         Glide.with(holder.itemView).load(bookData.getCoverURL()).into(holder.coverImange);
         holder.titleText.setText(bookData.getTitle());
         holder.authorText.setText(bookData.getAuthor());
