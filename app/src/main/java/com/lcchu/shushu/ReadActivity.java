@@ -18,7 +18,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -55,19 +54,19 @@ import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
 import java.io.InputStream;
+
+import java.util.ArrayList;
+import java.util.Objects;
+/*
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
-
-
-
+*/
 
 
 public class ReadActivity extends AppCompatActivity {
@@ -98,9 +97,9 @@ public class ReadActivity extends AppCompatActivity {
     View setting_layout,story_layout;
 
     SmartRefreshLayout switchChapter;
-    TextView tv1, temptxt, chapterName, txtsizeView;
+    TextView tv1, chapterName, txtsizeView;
     ImageView bookCover;
-    ScrollView storyScrollView,menuScrollView;
+    ScrollView storyScrollView;
     NavigationView chapterListView, settingView;
     RecyclerView chapterListViewR;
     DrawerLayout chapterListDrawer;
@@ -112,7 +111,7 @@ public class ReadActivity extends AppCompatActivity {
     Bitmap cover;
 
 
-
+/*
     public static void trustEveryone() {
         try {
             HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
@@ -139,34 +138,37 @@ public class ReadActivity extends AppCompatActivity {
         }
     }
 
+ */
+
+    @SuppressLint("InflateParams")
     public void setupView(){
-        bookCover = (ImageView)findViewById(R.id.cover_imageView);
+        bookCover = findViewById(R.id.cover_imageView);
 
         setting_layout = LayoutInflater.from(ReadActivity.this).inflate(R.layout.setting, null);
-        editfontsize = (SeekBar) setting_layout.findViewById(R.id.fontsize_seekbar);
-        darkmodeSwitch = (Switch) setting_layout.findViewById(R.id.switch1);
+        editfontsize = setting_layout.findViewById(R.id.fontsize_seekbar);
+        darkmodeSwitch = setting_layout.findViewById(R.id.switch1);
 
-        txtsizeView = (TextView)setting_layout.findViewById(R.id.fontsize_textview);
-        chapterName = (TextView)findViewById(R.id.chapternameView);
-        tv1 = (TextView)findViewById(R.id.textView);
+        txtsizeView = setting_layout.findViewById(R.id.fontsize_textview);
+        chapterName = findViewById(R.id.chapternameView);
+        tv1 = findViewById(R.id.textView);
         editfontsize.setProgress(textSize);
         txtsizeView.setText(String.valueOf(textSize));
 
-        switchChapter = (SmartRefreshLayout)findViewById(R.id.loadLayout);
+        switchChapter = findViewById(R.id.loadLayout);
         switchChapter.setEnableLoadMore(true);
         switchChapter.setEnableRefresh(true);
         switchChapter.setEnableAutoLoadMore(false);
 
 
 
-        storyScrollView = (ScrollView)findViewById(R.id.storyscroll);
-        story_layout = (RelativeLayout)findViewById(R.id.story_layout);
+        storyScrollView = findViewById(R.id.storyscroll);
+        story_layout = findViewById(R.id.story_layout);
 
-        chapterListView = (NavigationView)findViewById(R.id.chapterlist_navigation_view);
-        settingView = (NavigationView)findViewById(R.id.setting_navigation_view);
+        chapterListView = findViewById(R.id.chapterlist_navigation_view);
+        settingView = findViewById(R.id.setting_navigation_view);
 
-        chapterListDrawer = (DrawerLayout)findViewById(R.id.drawerLayout);
-        chapterListViewR = (RecyclerView)findViewById(R.id.chapterlist_RecyclerView);
+        chapterListDrawer = findViewById(R.id.drawerLayout);
+        chapterListViewR = findViewById(R.id.chapterlist_RecyclerView);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         chapterListViewR.setLayoutManager(layoutManager);
@@ -198,7 +200,7 @@ public class ReadActivity extends AppCompatActivity {
 
         switchChapter.setOnLoadMoreListener(new OnLoadMoreListener() {
             @Override
-            public void onLoadMore(RefreshLayout refreshLayout) {
+            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
                 if(currentIndex+1>=chapterList.size())
                     Toast.makeText(ReadActivity.this,"已是最後一章",Toast.LENGTH_LONG).show();
                 else {
@@ -326,8 +328,8 @@ public class ReadActivity extends AppCompatActivity {
             String readString = new String(readBytes);
             String []data = readString.split(",");
 
-            currentIndex = Integer.valueOf(data[0]);
-            scorllHistory = Integer.valueOf(data[1]);
+            currentIndex = Integer.parseInt(data[0]);
+            scorllHistory = Integer.parseInt(data[1]);
 
             fis.close();
 
@@ -350,7 +352,7 @@ public class ReadActivity extends AppCompatActivity {
         loadingDialog.show();
 
         System.out.println("started readactivty");
-        bookName = getIntent().getExtras().getString("bookName");
+        bookName = Objects.requireNonNull(getIntent().getExtras()).getString("bookName");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.story_main);
 
@@ -390,7 +392,7 @@ public class ReadActivity extends AppCompatActivity {
 
     public void saveHistory(){
         try{
-            String a = String.valueOf(currentIndex)+","+String.valueOf(storyScrollView.getScrollY());
+            String a = currentIndex + "," + storyScrollView.getScrollY();
 
             FileOutputStream fos  = openFileOutput(bookName+".cache", Context.MODE_PRIVATE);
 
@@ -450,9 +452,9 @@ public class ReadActivity extends AppCompatActivity {
                     long t1,t2;
 
 
-t1=System.currentTimeMillis();
+                    t1=System.currentTimeMillis();
                     Connection conn = Jsoup.connect(book.getChapterListURL()).ignoreContentType(true);
-                    chapterList = new ArrayList<ArrayList<String>>();
+                    chapterList = new ArrayList<>();
                     JSONArray chapterJson = new JSONObject(conn.get().text()).getJSONArray("items");
 
                     book.updateChapter(chapterJson.getJSONObject(currentIndex).getString("chapter_id"));
@@ -461,7 +463,7 @@ t1=System.currentTimeMillis();
                     for(int i=0;i<chapterJson.length();i++){
 
 
-                        chapterData = new ArrayList<String>();
+                        chapterData = new ArrayList<>();
                         chapterData.add(chapterJson.getJSONObject(i).getString("chapter_name"));
                         chapterData.add(chapterJson.getJSONObject(i).getString("chapter_id"));
                         chapterList.add(chapterData);
