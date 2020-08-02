@@ -246,20 +246,6 @@ public class ReadActivity extends AppCompatActivity {
                 return false;
             }
         });
-/*
-        storyScrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                if (storyScrollView.getChildAt(0).getHeight() - v.getHeight()
-                        == v.getScrollY()){
-                    book.updateChapter(chapterList.get(++currentIndex).get(1));
-
-                    new Thread(getStory).start();
-                }
-            }
-        });
-
-*/
 
         //語法一：new AlertDialog.Builder(主程式類別).XXX.XXX.XXX;
         final AlertDialog.Builder builder = new AlertDialog.Builder(ReadActivity.this);
@@ -318,7 +304,7 @@ public class ReadActivity extends AppCompatActivity {
 
         chapterListViewR.addOnItemTouchListener(new RecyclerItemClickListener(this, chapterListViewR ,new RecyclerItemClickListener.OnItemClickListener() {
             @Override public void onItemClick(View view, int position) {
-                // do whatever
+
 
                 //Toast.makeText(MainActivity.this,String.valueOf(view),Toast.LENGTH_LONG).show();
                 //關側滑
@@ -457,6 +443,7 @@ public class ReadActivity extends AppCompatActivity {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+            System.out.println("start send story message");
             handler.sendEmptyMessage(0);
         }
     };
@@ -479,6 +466,9 @@ t1=System.currentTimeMillis();
                     chapterList = new ArrayList<ArrayList<String>>();
                     JSONArray chapterJson = new JSONObject(conn.get().text()).getJSONArray("items");
 
+                    book.updateChapter(chapterJson.getJSONObject(currentIndex).getString("chapter_id"));
+                    System.out.println("make getStory start");
+                    new Thread(getStory).start();
                     for(int i=0;i<chapterJson.length();i++){
 
 
@@ -486,11 +476,6 @@ t1=System.currentTimeMillis();
                         chapterData.add(chapterJson.getJSONObject(i).getString("chapter_name"));
                         chapterData.add(chapterJson.getJSONObject(i).getString("chapter_id"));
                         chapterList.add(chapterData);
-                        if(i==currentIndex){
-                            book.updateChapter(chapterList.get(currentIndex).get(1));
-                            System.out.println("make getStory start");
-                            new Thread(getStory).start();
-                        }
 
                     }
                     t2=System.currentTimeMillis();

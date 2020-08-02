@@ -16,6 +16,7 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,8 +62,13 @@ public class MainActivity extends AppCompatActivity {
         bookkeyEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_DONE){
+                if(actionId == EditorInfo.IME_ACTION_SEARCH){
                     bookKeyWord = bookkeyEdit.getText().toString();
+                    bookkeyEdit.clearFocus();
+
+                    //hide ime after enter
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 
                     loadingDialog = new ProgressDialog(MainActivity.this);
                     loadingDialog.setMessage("努力加載中");
@@ -79,15 +85,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
     }
 
     public void initView() {
         bookkeyEdit = (EditText) findViewById(R.id.BookKeyeditText);
+
         searchResultList = (RecyclerView)findViewById(R.id.searchResultView);
+        searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
         favoriteBooksList = (RecyclerView)findViewById(R.id.favoriteBooksView);
+        favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.HORIZONTAL));
+        favoriteBooksList.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
         favoriteBooksList.setLayoutManager(new GridLayoutManager(this, 2));
 
-        //searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
+
     }
 
     @Override

@@ -1,6 +1,8 @@
 package comlechchu.github.piaoshu;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 
@@ -10,11 +12,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,9 +47,9 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
         // 宣告元件
         private TextView titleText, authorText, descText;
         private ImageView coverImange;
-        private CardView novelView;
+
         private ConstraintLayout resultDetailLayout;
-        private Button readBtn;
+
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -61,6 +71,69 @@ public class FavoriteAdapter extends RecyclerView.Adapter<FavoriteAdapter.ViewHo
                     v.getContext().startActivity(intent);
                     ((Activity)v.getContext()).overridePendingTransition(R.anim.in,R.anim.out);
 
+                }
+            });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(final View v) {
+
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
+                    dialog.setTitle("提示");
+                    dialog.setMessage("確定要刪除小說嗎?");
+                    dialog.setNegativeButton("NO",new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface arg0, int arg1) {
+
+                        }
+
+                    });
+                    dialog.setPositiveButton("YES",new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface arg0, int arg1) {
+                            // TODO Auto-generated method stub
+                            String json;
+
+                            ArrayList<NovelInfo> favBooks = new ArrayList<NovelInfo>();
+                            File favFile = v.getContext().getFileStreamPath("favBooksInfo.json");
+                            if(favFile.exists()) {
+                                try {
+
+                                    FileInputStream fis = new FileInputStream(favFile);
+                                    byte[] readBytes = new byte[fis.available()];
+                                    fis.read(readBytes);
+                                    fis.close();
+                                    json = new String(readBytes);
+
+                                    NovelInfo favBookDatas;
+                                    JSONArray favBooksJson = new JSONObject(json).getJSONArray("books");
+                                    favBooksJson.remove(getAdapterPosition());
+
+                                    JSONObject doneJO = new JSONObject();
+                                    doneJO.put("books",favBooksJson);
+
+                                    FileOutputStream fos = v.getContext().openFileOutput("favBooksInfo.json", Context.MODE_PRIVATE);
+                                    fos.write(doneJO.toString().getBytes());
+                                    fos.close();
+                                    //notifyDataSetChanged();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                        /*
+                        FAdapter = new FavoriteAdapter(favBooks);
+                        uiUpdateHandler.sendEmptyMessage(2);
+
+                         */
+                            }
+
+                        }
+
+                    });
+
+                    dialog.show();
+
+
+                    return false;
                 }
             });
 
