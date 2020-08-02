@@ -3,7 +3,6 @@ package comlechchu.github.piaoshu;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +23,6 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,14 +48,14 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         ViewHolder(View itemView) {
             super(itemView);
             Button readBtn, addFavBtn;
-            titleText = (TextView) itemView.findViewById(R.id.booknameTV);
-            authorText = (TextView) itemView.findViewById(R.id.bookauthorTV);
-            descText = (TextView) itemView.findViewById(R.id.bookdescTV);
-            coverImange = (ImageView) itemView.findViewById(R.id.bookcoverIV);
+            titleText = itemView.findViewById(R.id.booknameTV);
+            authorText = itemView.findViewById(R.id.bookauthorTV);
+            descText = itemView.findViewById(R.id.bookdescTV);
+            coverImange = itemView.findViewById(R.id.bookcoverIV);
 
-            resultDetailLayout = (ConstraintLayout)itemView.findViewById(R.id.expandlayout);
-            readBtn = (Button)itemView.findViewById(R.id.startreadBtn);
-            addFavBtn = (Button)itemView.findViewById(R.id.addfavoriteBtn);
+            resultDetailLayout = itemView.findViewById(R.id.expandlayout);
+            readBtn = itemView.findViewById(R.id.startreadBtn);
+            addFavBtn = itemView.findViewById(R.id.addfavoriteBtn);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -86,7 +84,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             addFavBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ArrayList<NovelInfo> favBooks = new ArrayList<NovelInfo>();
+                    //ArrayList<NovelInfo> favBooks = new ArrayList<NovelInfo>();
 
                     try {
                         File favFile = v.getContext().getFileStreamPath("favBooksInfo.json");
