@@ -127,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
 
         AdRequest adRequest = new AdRequest.Builder().build();
         ad.loadAd(adRequest);
+
+
         //new Thread(getSearchResult).start();
     }
 
