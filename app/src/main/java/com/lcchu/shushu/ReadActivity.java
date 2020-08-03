@@ -187,6 +187,8 @@ public class ReadActivity extends AppCompatActivity {
                 else {
                     scorllHistory = 0;
                     book.updateChapter(chapterList.get(--currentIndex).get(1));
+                    CAdapter.updateIndex(currentIndex);
+
                     stroyRead = new Thread(getStory);
                     stroyRead.start();
                     try {
@@ -207,6 +209,7 @@ public class ReadActivity extends AppCompatActivity {
                 else {
                     scorllHistory = 0;
                     book.updateChapter(chapterList.get(++currentIndex).get(1));
+                    CAdapter.updateIndex(currentIndex);
 
                     stroyRead = new Thread(getStory);
                     stroyRead.start();
@@ -293,27 +296,6 @@ public class ReadActivity extends AppCompatActivity {
 
 
         });
-        /*
-
-        chapterListViewR.addOnItemTouchListener(new RecyclerItemClickListener(this, chapterListViewR ,new RecyclerItemClickListener.OnItemClickListener() {
-            @Override public void onItemClick(View view, int position) {
-
-                scorllHistory = 0;
-                chapterListDrawer.closeDrawer(GravityCompat.START);
-                currentIndex = position;
-                book.updateChapter(chapterList.get(currentIndex).get(1));
-                new Thread(getStory).start();
-
-            }
-
-            @Override public void onLongItemClick(View view, int position) {
-                // do whatever
-            }
-        }));
-
-
-
-         */
 
 
     }
@@ -414,6 +396,7 @@ public class ReadActivity extends AppCompatActivity {
         @Override
         public void run() {
 
+
             handler.sendEmptyMessage(3);
             try {
                 System.out.println("start load story-thread");
@@ -428,7 +411,8 @@ public class ReadActivity extends AppCompatActivity {
                 Document doc = Jsoup.connect(book.getBookURL()).ignoreContentType(true).get();
 
                 title = doc.select("p");
-                //saveHistory();
+                saveHistory();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

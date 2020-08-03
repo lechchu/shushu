@@ -5,97 +5,99 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<androidx.cardview.widget.CardView
-    android:id="@+id/novelCV"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    tools:ignore="MissingConstraints">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.cardview.widget.CardView
+        android:id="@+id/novelCV"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/bookcoverIV"
-            android:layout_width="111sp"
-            android:layout_height="148sp"
-            android:adjustViewBounds="true"
-            android:maxWidth="111sp"
-            android:maxHeight="148sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="MissingConstraints" />
-
-
-        <TextView
-            android:id="@+id/booknameTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="TextView"
-            android:textSize="17sp"
-
-            android:textStyle="bold"
-            app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="MissingConstraints" />
-
-        <TextView
-            android:id="@+id/bookauthorTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TextView"
-            android:textSize="17sp"
-
-            app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-            app:layout_constraintTop_toBottomOf="@+id/booknameTV"
-            tools:ignore="MissingConstraints" />
-
-        <TextView
-            android:id="@+id/bookdescTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:autoSizeTextType="uniform"
-            android:text="TextView"
-
-            android:textSize="17sp"
-            app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-            app:layout_constraintTop_toBottomOf="@+id/bookauthorTV"
-            tools:ignore="MissingConstraints" />
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="MissingConstraints">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/expandlayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="visible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toRightOf="parent"
-            app:layout_constraintRight_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/bookcoverIV">
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/bookcoverIV"
+                android:layout_width="111sp"
+                android:layout_height="148sp"
+                android:adjustViewBounds="true"
+                android:maxWidth="111sp"
+                android:maxHeight="148sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="MissingConstraints" />
 
 
-            <Button
-                android:id="@+id/addfavoriteBtn"
+            <TextView
+                android:id="@+id/booknameTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="加入最愛"
-                android:textSize="15sp"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:layout_marginTop="8dp"
+                android:text="TextView"
+                android:textSize="17sp"
 
-            <Button
-                android:id="@+id/startreadBtn"
+                android:textStyle="bold"
+                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="MissingConstraints" />
+
+            <TextView
+                android:id="@+id/bookauthorTV"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textSize="17sp"
 
-                android:layout_marginEnd="8dp"
-                android:text="開始閱讀"
-                android:textSize="15sp"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
+                app:layout_constraintTop_toBottomOf="@+id/booknameTV"
+                tools:ignore="MissingConstraints" />
+
+            <TextView
+                android:id="@+id/bookdescTV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autoSizeTextType="uniform"
+                android:text="TextView"
+
+                android:textSize="17sp"
+                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
+                app:layout_constraintTop_toBottomOf="@+id/bookauthorTV"
+                tools:ignore="MissingConstraints" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/expandlayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintLeft_toRightOf="parent"
+                app:layout_constraintRight_toLeftOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/bookcoverIV">
+
+
+                <Button
+                    android:id="@+id/addfavoriteBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="加入最愛"
+                    android:textSize="15sp"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <Button
+                    android:id="@+id/startreadBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:layout_marginEnd="8dp"
+                    android:text="開始閱讀"
+                    android:textSize="15sp"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
