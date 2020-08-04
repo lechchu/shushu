@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/openbook"
+        android:contentDescription="bg" />
 
     <EditText
         android:id="@+id/BookKeyeditText"
@@ -13,11 +21,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:ems="10"
+        android:gravity="center"
         android:hint="小說關鍵字"
         android:imeOptions="actionSearch"
         android:inputType="text"
         android:singleLine="true"
-        android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
 
@@ -25,8 +33,9 @@
         android:id="@+id/favoriteBooksView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+
         android:layout_marginTop="16dp"
-        android:background="#FFFFFF"
+        android:background="#00000000"
         app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText" />
 
 
@@ -37,8 +46,7 @@
         android:layout_marginTop="16dp"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText" >
-
+        app:layout_constraintTop_toBottomOf="@+id/BookKeyeditText">
 
 
     </androidx.recyclerview.widget.RecyclerView>
@@ -53,7 +61,8 @@
         app:adUnitId="ca-app-pub-3049736794394736/1179253178"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:ignore="MissingConstraints" />
-<!--
+
+    <!--
     <com.google.android.material.tabs.TabLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

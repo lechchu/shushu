@@ -102,7 +102,7 @@ public class ReadActivity extends AppCompatActivity {
 
     private Timer saveTimer;
 
-    boolean adOn = true;
+    boolean adOn = false;
 
 //UI
 

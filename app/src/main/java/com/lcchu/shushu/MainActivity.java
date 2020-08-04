@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView favoriteBooksList;
 
     private AdView ad;
-    boolean adOn = false;
+    boolean adOn = true;
 
     SearchAdapter SAdapter;
     FavoriteAdapter FAdapter;
