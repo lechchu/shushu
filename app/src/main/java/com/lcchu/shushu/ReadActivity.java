@@ -48,6 +48,12 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.material.navigation.NavigationView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
@@ -58,6 +64,8 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 /*
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -91,6 +99,10 @@ public class ReadActivity extends AppCompatActivity {
     Thread chapterLoad, stroyRead;
 
     AlertDialog settingDialog;
+
+    private Timer saveTimer;
+
+    boolean adOn = true;
 
 //UI
 
@@ -159,6 +171,8 @@ public class ReadActivity extends AppCompatActivity {
         switchChapter.setEnableLoadMore(true);
         switchChapter.setEnableRefresh(true);
         switchChapter.setEnableAutoLoadMore(false);
+        switchChapter.setFooterTriggerRate((float)0.6);
+        switchChapter.setHeaderTriggerRate((float)0.6);
 
 
 
@@ -326,6 +340,50 @@ public class ReadActivity extends AppCompatActivity {
             saveSetting();
         }
     }
+
+    private void setSaveTimer(){
+
+        saveTimer = new Timer();
+
+        saveTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                saveHistory();
+            }
+        }, 3000, 1000);
+    }
+
+    private void adLoad(){
+        final InterstitialAd mInterstitialAd;
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {}
+        });
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId("ca-app-pub-3049736794394736/2698302682");
+
+
+        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.setAdListener(new AdListener(){
+            @Override
+            public void onAdLoaded() {
+                // Code to be executed when an ad finishes loading.
+                mInterstitialAd.show();
+            }
+            @Override
+            public void onAdClosed() {
+                // Load the next interstitial.
+                //mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when the ad is displayed.
+            }
+
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         loadingDialog = new ProgressDialog(this);
@@ -336,6 +394,10 @@ public class ReadActivity extends AppCompatActivity {
         bookName = Objects.requireNonNull(getIntent().getExtras()).getString("bookName");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.story_main);
+
+        if(adOn)
+            adLoad();
+
 
         long t1,t2;
         t1 = System.currentTimeMillis();
@@ -368,7 +430,7 @@ public class ReadActivity extends AppCompatActivity {
 
 
         //new Thread(getCover).start();
-        //new Thread(getStory).start();
+        setSaveTimer();
     }
 
     public void saveHistory(){
@@ -508,18 +570,21 @@ public class ReadActivity extends AppCompatActivity {
     private void ToQuitTheApp() {
         if (isExit) {
             // ACTION_MAIN with category CATEGORY_HOME 啟動主屏幕
-
+            saveTimer.cancel();
             System.exit(0);// 使虛擬機停止運行並退出程序
         } else {
             isExit = true;
-            saveHistory();
+            //saveHistory();
             Toast.makeText(ReadActivity.this, "按下返回退出閱讀", Toast.LENGTH_SHORT).show();
             handler.sendEmptyMessageDelayed(9, 3000);// 3秒後發送消息
         }
     }
 
+
+
     @Override
     public void finish() {
+
         super.finish();
         overridePendingTransition(R.anim.in, R.anim.out);
     }

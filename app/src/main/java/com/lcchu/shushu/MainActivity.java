@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView favoriteBooksList;
 
     private AdView ad;
+    boolean adOn = false;
 
     SearchAdapter SAdapter;
     FavoriteAdapter FAdapter;
@@ -115,9 +117,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
         initView();
         setupListener();
         loadFavBooksJson();
+
 
         MobileAds.initialize(this, new OnInitializationCompleteListener() {
             @Override
@@ -126,7 +130,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         AdRequest adRequest = new AdRequest.Builder().build();
-        ad.loadAd(adRequest);
+        if(adOn)
+            ad.loadAd(adRequest);
 
 
         //new Thread(getSearchResult).start();
@@ -177,19 +182,13 @@ public class MainActivity extends AppCompatActivity {
             try {
 
                 long t1,t2;
-                //uiUpdateHandler.sendEmptyMessage(1);
+                uiUpdateHandler.sendEmptyMessage(1);
                 //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
                 //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
                 bookKeyWord = java.net.URLEncoder.encode(bookKeyWord,"UTF-8");
 
 
                 t1 = System.currentTimeMillis();
-/*
-                OkHttpClient okHttp = new OkHttpClient();
-                Request request = new Request.Builder().url("https://tw.ttkan.co/novel/search?q="+bookKeyWord).get().build();
-                Document doc = Jsoup.parse(okHttp.newCall(request).execute().body().string());
-*/
-
                 Document doc = Jsoup.connect("https://tw.ttkan.co/novel/search?q="+bookKeyWord).ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println("get load page: "+(t2-t1));

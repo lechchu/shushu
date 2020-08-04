@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:autoSizeTextType="uniform"
+        android:maxLines="1"
         android:gravity="center"
         android:textStyle="bold"
         android:textSize="15sp"
@@ -31,7 +32,8 @@
 
         <com.scwang.smart.refresh.header.ClassicsHeader
             android:layout_width = "match_parent"
-            android:layout_height = "wrap_content" />
+            android:layout_height = "wrap_content"
+            app:srlTextPulling="加載上一章"/>
 
 
     <ScrollView
