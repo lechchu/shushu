@@ -7,13 +7,14 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_marginTop="32dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/openbook"
-        android:contentDescription="bg" />
+
+        android:contentDescription="bgfrom pngtree.com" />
 
     <EditText
         android:id="@+id/BookKeyeditText"
@@ -27,7 +28,8 @@
         android:inputType="text"
         android:singleLine="true"
         app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        android:autofillHints="" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/favoriteBooksView"

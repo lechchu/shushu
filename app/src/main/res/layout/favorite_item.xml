@@ -30,6 +30,8 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextWhite"
+            android:autoSizeTextType="uniform"
+            android:maxLines="1"
             android:layout_below="@id/fav_bookcoverIV" />
     </RelativeLayout>
 

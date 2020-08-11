@@ -171,8 +171,8 @@ public class ReadActivity extends AppCompatActivity {
         switchChapter.setEnableLoadMore(true);
         switchChapter.setEnableRefresh(true);
         switchChapter.setEnableAutoLoadMore(false);
-        switchChapter.setFooterTriggerRate((float)0.6);
-        switchChapter.setHeaderTriggerRate((float)0.6);
+        switchChapter.setFooterTriggerRate((float)0.5);
+        switchChapter.setHeaderTriggerRate((float)0.5);
 
 
 
@@ -612,8 +612,10 @@ public class ReadActivity extends AppCompatActivity {
                         handler.sendEmptyMessageDelayed(5, 300);
 
                         break;
+
                     case 1:
                         chapterListViewR.setAdapter(CAdapter);
+                        chapterListViewR.scrollToPosition(currentIndex);
                         break;
                     case 2:
                         //bookCover.setImageBitmap(cover);
