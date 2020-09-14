@@ -7,8 +7,6 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
@@ -42,7 +40,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 
-
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -59,8 +56,6 @@ import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
-
-import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -121,7 +116,7 @@ public class ReadActivity extends AppCompatActivity {
     ProgressDialog loadingDialog;
 
     Elements title = new Elements();
-    Bitmap cover;
+
 
 
 /*
