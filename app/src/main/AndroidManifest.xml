@@ -20,7 +20,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.lcchu.shushu.ReadActivity">
+        <activity android:name="com.lcchu.shushu.ReadActivity"
+            >
         </activity>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />

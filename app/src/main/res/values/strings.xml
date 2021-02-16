@@ -2,5 +2,10 @@
     <string name="app_name">舒書</string>
     <string name="tabitem_myfav">舒櫃</string>
     <string name="tabitem_search">找舒</string>
-
+    
+    <string name="pulling">Pull More To Load</string>
+    <string name="footer_release">Release To Load Next Chapter</string>
+    <string name="header_release">Release To Load Previous Chapter</string>
+    <string name="header_refreshing">Loading...</string>
+    <string name="load_finish">Load Success</string>
 </resources>

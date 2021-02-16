@@ -10,6 +10,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
+    <TextClock
+        android:id="@+id/textclock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#FF888888"
+        android:visibility="gone"
+        android:format24Hour="h:mm"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="40dp" />
+
     <TextView
         android:id="@+id/chapternameView"
         android:layout_width="match_parent"
@@ -31,9 +43,15 @@
         app:srlEnablePreviewInEditMode="true">
 
         <com.scwang.smart.refresh.header.ClassicsHeader
+            android:id="@+id/loadheader"
             android:layout_width = "match_parent"
             android:layout_height = "wrap_content"
-            app:srlTextPulling="加載上一章"/>
+            app:srlEnableLastTime="false"
+            app:srlTextPulling="@string/pulling"
+            app:srlTextLoading="@string/header_refreshing"
+            app:srlTextRelease="@string/header_release"
+            app:srlTextFinish="@string/load_finish"
+            app:srlTextRefreshing="@string/header_refreshing"/>
 
 
     <ScrollView
@@ -65,8 +83,11 @@
         </LinearLayout>
     </ScrollView>
     <com.scwang.smart.refresh.footer.ClassicsFooter
+        android:id="@+id/loadfooter"
         android:layout_width = "match_parent"
-        android:layout_height = "wrap_content" />
+        android:layout_height = "wrap_content"
+        app:srlTextRelease="@string/footer_release"
+        app:srlTextPulling="@string/pulling"/>
 
     </com.scwang.smart.refresh.layout.SmartRefreshLayout>
 </RelativeLayout>

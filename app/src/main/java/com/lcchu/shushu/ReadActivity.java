@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.Switch;
+import android.widget.TextClock;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -82,6 +84,7 @@ public class ReadActivity extends AppCompatActivity {
     int textSize = 24;
 
     boolean isExit=false;
+    boolean switch_clock, switch_darkmode;
 
     BookData book;
 
@@ -105,6 +108,7 @@ public class ReadActivity extends AppCompatActivity {
     View setting_layout,story_layout;
 
     SmartRefreshLayout switchChapter;
+
     TextView tv1, chapterName, txtsizeView;
     ImageView bookCover;
     ScrollView storyScrollView;
@@ -112,8 +116,9 @@ public class ReadActivity extends AppCompatActivity {
     RecyclerView chapterListViewR;
     DrawerLayout chapterListDrawer;
     SeekBar editfontsize;
-    Switch darkmodeSwitch;
+    Switch darkmodeSwitch, clockSwitch;
     ProgressDialog loadingDialog;
+    TextClock clock;
 
     Elements title = new Elements();
 
@@ -154,12 +159,15 @@ public class ReadActivity extends AppCompatActivity {
 
         setting_layout = LayoutInflater.from(ReadActivity.this).inflate(R.layout.setting, null);
         editfontsize = setting_layout.findViewById(R.id.fontsize_seekbar);
-        darkmodeSwitch = setting_layout.findViewById(R.id.switch1);
+        darkmodeSwitch = setting_layout.findViewById(R.id.switch_darkmode);
+        clockSwitch = setting_layout.findViewById(R.id.switch_clock);
+        clock = findViewById(R.id.textclock);
 
         txtsizeView = setting_layout.findViewById(R.id.fontsize_textview);
         chapterName = findViewById(R.id.chapternameView);
         tv1 = findViewById(R.id.textView);
         editfontsize.setProgress(textSize);
+
         txtsizeView.setText(String.valueOf(textSize));
 
         switchChapter = findViewById(R.id.loadLayout);
@@ -168,7 +176,6 @@ public class ReadActivity extends AppCompatActivity {
         switchChapter.setEnableAutoLoadMore(false);
         switchChapter.setFooterTriggerRate((float)0.5);
         switchChapter.setHeaderTriggerRate((float)0.5);
-
 
 
         storyScrollView = findViewById(R.id.storyscroll);
@@ -290,6 +297,7 @@ public class ReadActivity extends AppCompatActivity {
             @SuppressLint("ResourceAsColor")
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                switch_darkmode=isChecked;
                 if(isChecked) {
                     //storyScrollView.setBackgroundColor(Color.parseColor("#2C3E50"));
 
@@ -301,8 +309,24 @@ public class ReadActivity extends AppCompatActivity {
 
                     tv1.setTextColor(Color.parseColor("#666666"));
                 }
+                saveSetting();
                 }
 
+
+        });
+
+        clockSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @SuppressLint("ResourceAsColor")
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                switch_clock=isChecked;
+                if(isChecked) {
+                    clock.setVisibility(View.VISIBLE);
+                }else {
+                    clock.setVisibility(View.GONE);
+                }
+                saveSetting();
+            }
 
         });
 
@@ -324,10 +348,12 @@ public class ReadActivity extends AppCompatActivity {
             fis.close();
 
 
-            fis = openFileInput("user_setting.cache");
-            textSize = fis.read();
-            fis.close();
-            handler.sendEmptyMessage(4);
+
+            textSize = getSharedPreferences("user_setting", MODE_PRIVATE).getInt("FontSize", 24);
+            switch_clock = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("Clock", true);
+            switch_darkmode = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("DarkMode", false);
+
+            handler.sendEmptyMessage(4); //discharge textsize, darkmode, clock
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -443,9 +469,12 @@ public class ReadActivity extends AppCompatActivity {
 
     public void saveSetting(){
         try{
-            FileOutputStream fos  = openFileOutput("user_setting.cache", Context.MODE_PRIVATE);
-            fos.write(textSize);
-            fos.close();
+
+            getSharedPreferences("user_setting", MODE_PRIVATE).edit()
+                    .putInt("FontSize", textSize)
+                    .putBoolean("DarkMode",switch_darkmode)
+                    .putBoolean("Clock",switch_clock)
+                    .commit();
         }catch (Exception e){e.printStackTrace();}
     }
 
@@ -566,7 +595,8 @@ public class ReadActivity extends AppCompatActivity {
         if (isExit) {
             // ACTION_MAIN with category CATEGORY_HOME 啟動主屏幕
             saveTimer.cancel();
-            System.exit(0);// 使虛擬機停止運行並退出程序
+//            System.exit(0);// 使虛擬機停止運行並退出程序
+            this.finish();
         } else {
             isExit = true;
             //saveHistory();
@@ -581,8 +611,17 @@ public class ReadActivity extends AppCompatActivity {
     public void finish() {
 
         super.finish();
-        overridePendingTransition(R.anim.in, R.anim.out);
+        this.overridePendingTransition(R.anim.stay, R.anim.out);
     }
+
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        if (isFinishing()){
+//            overridePendingTransition(R.anim.stay, R.anim.out);
+//        }
+//
+//    }
 
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler(){
@@ -619,6 +658,8 @@ public class ReadActivity extends AppCompatActivity {
                         tv1.setVisibility(View.INVISIBLE);
                         break;
                     case 4:
+                        darkmodeSwitch.setChecked(switch_darkmode);
+                        clockSwitch.setChecked(switch_clock);
                         tv1.setTextSize(textSize);
                         break;
                     case 5:
