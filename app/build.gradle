@@ -34,7 +34,7 @@ dependencies {
     implementation 'com.scwang.smart:refresh-footer-classics:2.0.1'
     implementation 'com.scwang.smart:refresh-header-classics:2.0.1'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
-    implementation 'com.google.android.gms:play-services-ads:19.3.0'
+    implementation 'com.google.android.gms:play-services-ads:19.7.0'
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
     testImplementation 'junit:junit:4.12'

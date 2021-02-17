@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Objects;
 
 import android.annotation.SuppressLint;
@@ -26,6 +27,7 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.material.tabs.TabLayout;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
 
     EditText bookkeyEdit;
 
+    TabLayout tab;
+
+    String[] tabitem = {"xuanhuan", "lianzai", "suixuan", "xuanhuan", "gudaiyanqing", "chuanyuechongsheng", "dushi", "kehuan", "xianxia", "yanqing", "lishi", "lingyi", "xuanyi", "xuanhuan", "youxi", "qita"};
+
     RecyclerView searchResultList;
     RecyclerView favoriteBooksList;
 
@@ -62,13 +68,60 @@ public class MainActivity extends AppCompatActivity {
 
     public void setupListener() {
 
+        tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                loadingDialog = new ProgressDialog(MainActivity.this);
+                loadingDialog.setMessage("努力加載中");
+                loadingDialog.show();
 
+                if(tab.getPosition()==1){
+                    new Thread(getRank).start();
+                    if(searchResultList.getVisibility()!=View.VISIBLE)
+                        searchResultList.setVisibility(View.VISIBLE);
+                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
+                        favoriteBooksList.setVisibility(View.GONE);
+                }
+                else if (tab.getPosition()>0){
+
+                    new Thread (new getNovelList(tabitem[tab.getPosition()])).start();
+                    if(searchResultList.getVisibility()!=View.VISIBLE)
+                        searchResultList.setVisibility(View.VISIBLE);
+                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
+                        favoriteBooksList.setVisibility(View.GONE);
+                }else{
+
+                    loadingDialog.dismiss();
+                    if (searchResultList.getVisibility() == View.VISIBLE){
+                        searchResultList.setVisibility(View.GONE);
+                        favoriteBooksList.setVisibility(View.VISIBLE);
+
+                        uiUpdateHandler.sendEmptyMessage(1);
+                        loadFavBooksJson();
+                    }
+                }
+
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+
+        //搜索鍵
         bookkeyEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_SEARCH&& !bookkeyEdit.getText().toString().equals("")){
                     bookKeyWord = bookkeyEdit.getText().toString();
-
+                    tab.setScrollPosition(0,0,true);
 
                     //hide ime after enter
                     InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -100,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
 
         ad = findViewById(R.id.adView);
 
+        tab = findViewById(R.id.tab);
+
         searchResultList = findViewById(R.id.searchResultView);
         searchResultList.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
         favoriteBooksList = findViewById(R.id.favoriteBooksView);
@@ -114,9 +169,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-
 
         initView();
         setupListener();
@@ -245,22 +297,8 @@ public class MainActivity extends AppCompatActivity {
 
                 String rankURL = "https://tw.ttkan.co/novel/rank/";
                 String rankType = "xuanhuan";
-                /*
-                type
-                xuanhuan 玄幻
-                gudaiyanqing 言情
-                chuanyuechongsheng 穿越
-                dushi 都市
-                kehuan 科幻
-                xianxia 仙俠
-                yanqing 現代言情
-                lishi 歷史
-                lingyi 靈異
-                xuanyi 懸疑
-                youxi 遊戲
-                qita 其他
-                 */
-                Document doc = Jsoup.connect(rankURL+rankType).ignoreContentType(true).get();
+
+                Document doc = Jsoup.connect(rankURL).ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println(t2-t1);
 
@@ -282,9 +320,9 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case 2:
                             //類別
-                            Document desdoc = Jsoup.connect("https://tw.ttkan.co/novel/chapters/"+ni.getName()).ignoreContentType(true).get();
-                            ni.setDesc("簡介: "+desdoc.select(".description").text());
-
+//                            Document desdoc = Jsoup.connect("https://tw.ttkan.co/novel/chapters/"+ni.getName()).ignoreContentType(true).get();
+//                            ni.setDesc("簡介: "+desdoc.select(".description").select(".p").text());
+                            ni.setDesc("簡介: ");
                             break;
                         case 3:
                             //狀態:連載;完結
@@ -302,40 +340,21 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    Runnable getAll = new Runnable() {
-        @Override
-        public void run() {
-            //https://tw.ttkan.co/novel/class/xuanhuan
+
+    class getNovelList implements Runnable {
+        String mCategory ;
+        getNovelList ( String Category ) { mCategory = Category; }
+        public void run ( ) {
             try{
                 //TODO 抓分類小說
                 long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
-                //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
-                //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
-                // bookKeyWord = java.net.URLEncoder.encode(bookKeyWord,"UTF-8");
-
 
                 t1 = System.currentTimeMillis();
 
                 String allURL = "https://tw.ttkan.co/novel/class/";
-                String allType = "";
-                /*
-                type
-                lianzai 連載
-                suixuan 隨選
-                xuanhuan 玄幻
-                gudaiyanqing 言情
-                chuanyuechongsheng 穿越
-                dushi 都市
-                kehuan 科幻
-                xianxia 仙俠
-                yanqing 現代言情
-                lishi 歷史
-                lingyi 靈異
-                xuanyi 懸疑
-                youxi 遊戲
-                qita 其他
-                 */
+                String allType = mCategory;
+
                 Document doc = Jsoup.connect(allURL+allType).ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println(t2-t1);
@@ -349,6 +368,11 @@ public class MainActivity extends AppCompatActivity {
                         case 0:
                             ni = new NovelInfo();
                             String[] name = result.select("a").attr("href").split("/");
+
+                            if(name[3]=="{{novel_id}}"){
+                                System.out.println("get");
+                                break;}
+//                            System.out.println(result.text());
                             ni.setName(name[3]);
                             ni.setCoverURL("https://static.ttkan.co/cover/" + ni.getName().split("-")[0] + ".jpg");
                             ni.setTitle(result.text());
@@ -359,22 +383,26 @@ public class MainActivity extends AppCompatActivity {
                         case 2:
                             ni.setDesc(result.text());
                             infoIndex = 0;
-                            searchResult.add(ni);
+                            if(!ni.getName().equals("{{novel_id}}"))
+                                searchResult.add(ni);
                             break;
                         default:
                             break;
                     }
 
                 }
+                SAdapter = new SearchAdapter(searchResult);
+                uiUpdateHandler.sendEmptyMessage(0);
             }catch (Exception e){e.printStackTrace();}
 
         }
-    };
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) { // 攔截返回鍵
+            tab.setScrollPosition(0,0,true);
             if (searchResultList.getVisibility() == View.VISIBLE){
                 searchResultList.setVisibility(View.GONE);
                 favoriteBooksList.setVisibility(View.VISIBLE);

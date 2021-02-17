@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.cardview.widget.CardView
@@ -11,11 +12,13 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
+
         tools:ignore="MissingConstraints">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:clipChildren="false">
 
             <ImageView
                 android:id="@+id/bookcoverIV"
@@ -28,42 +31,50 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="MissingConstraints" />
 
+            <TextView
+            android:id="@+id/booknameTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="TextView"
+            android:textSize="17sp"
+            android:textStyle="bold"
+
+            tools:ignore="MissingConstraints"
+
+            app:layout_constraintStart_toEndOf="@+id/bookcoverIV"/>
 
             <TextView
-                android:id="@+id/booknameTV"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="TextView"
-                android:textSize="17sp"
+            android:id="@+id/bookauthorTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textSize="17sp"
+            tools:ignore="MissingConstraints"
+            app:layout_constraintTop_toBottomOf="@id/booknameTV"
+            app:layout_constraintStart_toEndOf="@+id/bookcoverIV"/>
 
-                android:textStyle="bold"
-                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="MissingConstraints" />
 
             <TextView
-                android:id="@+id/bookauthorTV"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TextView"
-                android:textSize="17sp"
+            android:id="@+id/bookdescTV"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:autoSizeTextType="none"
+            android:singleLine="false"
+            android:text="TextView"
+            android:textSize="17sp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:scrollbars="vertical"
 
-                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-                app:layout_constraintTop_toBottomOf="@+id/booknameTV"
-                tools:ignore="MissingConstraints" />
+            app:layout_constraintBottom_toTopOf="@+id/expandlayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintVertical_weight="1"
+            app:layout_constraintStart_toEndOf="@+id/bookcoverIV"
+            app:layout_constraintTop_toBottomOf="@id/bookauthorTV"
+            tools:ignore="MissingConstraints" />
 
-            <TextView
-                android:id="@+id/bookdescTV"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:autoSizeTextType="uniform"
-                android:text="TextView"
-
-                android:textSize="17sp"
-                app:layout_constraintLeft_toRightOf="@+id/bookcoverIV"
-                app:layout_constraintTop_toBottomOf="@+id/bookauthorTV"
-                tools:ignore="MissingConstraints" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/expandlayout"
@@ -101,3 +112,100 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+<!--<TextView-->
+<!--android:id="@+id/booknameTV"-->
+<!--android:layout_width="wrap_content"-->
+<!--android:layout_height="wrap_content"-->
+<!--android:layout_marginTop="8dp"-->
+<!--android:text="TextView"-->
+<!--android:textSize="17sp"-->
+<!--android:textStyle="bold"-->
+
+<!--tools:ignore="MissingConstraints"-->
+
+<!--app:layout_constraintStart_toEndOf="@+id/bookcoverIV"/>-->
+
+<!--<TextView-->
+<!--android:id="@+id/bookauthorTV"-->
+<!--android:layout_width="wrap_content"-->
+<!--android:layout_height="wrap_content"-->
+<!--android:text="TextView"-->
+<!--android:textSize="17sp"-->
+<!--tools:ignore="MissingConstraints"-->
+<!--app:layout_constraintTop_toBottomOf="@id/booknameTV"-->
+<!--app:layout_constraintStart_toEndOf="@+id/bookcoverIV"/>-->
+
+
+<!--<TextView-->
+<!--android:id="@+id/bookdescTV"-->
+<!--android:layout_width="0dp"-->
+<!--android:layout_height="0dp"-->
+<!--android:autoSizeTextType="none"-->
+<!--android:singleLine="false"-->
+<!--android:text="TextView"-->
+<!--android:textSize="17sp"-->
+<!--android:focusable="true"-->
+<!--android:focusableInTouchMode="true"-->
+<!--android:scrollbars="vertical"-->
+
+<!--app:layout_constraintBottom_toTopOf="@+id/expandlayout"-->
+<!--app:layout_constraintEnd_toEndOf="parent"-->
+<!--app:layout_constraintHorizontal_weight="1"-->
+<!--app:layout_constraintStart_toEndOf="@+id/bookcoverIV"-->
+<!--app:layout_constraintTop_toBottomOf="@id/bookauthorTV"-->
+<!--app:layout_constraintVertical_weight="1"-->
+<!--tools:ignore="MissingConstraints" />-->
+
+
+<!--<ScrollView-->
+<!--android:layout_width="0dp"-->
+<!--android:layout_height="0dp"-->
+<!--app:layout_constraintBottom_toTopOf="@+id/expandlayout"-->
+<!--app:layout_constraintEnd_toEndOf="parent"-->
+<!--app:layout_constraintStart_toEndOf="@+id/bookcoverIV"-->
+<!--app:layout_constraintTop_toTopOf="parent"-->
+<!--android:focusable="true"-->
+<!--android:focusableInTouchMode="true">-->
+
+<!--<LinearLayout-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:orientation="vertical" >-->
+<!--    <TextView-->
+<!--        android:id="@+id/booknameTV"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        android:text="TextView"-->
+<!--        android:textSize="17sp"-->
+<!--        android:textStyle="bold"-->
+
+<!--        tools:ignore="MissingConstraints"-->
+
+<!--        />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/bookauthorTV"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="TextView"-->
+<!--        android:textSize="17sp"-->
+<!--        tools:ignore="MissingConstraints" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/bookdescTV"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:autoSizeTextType="none"-->
+
+<!--        android:scrollbars="vertical"-->
+<!--        android:singleLine="false"-->
+<!--        android:text="TextView"-->
+<!--        android:textSize="17sp"-->
+
+<!--        tools:ignore="MissingConstraints" />-->
+<!--    -->
+
+<!--</LinearLayout>-->
+<!--</ScrollView>-->

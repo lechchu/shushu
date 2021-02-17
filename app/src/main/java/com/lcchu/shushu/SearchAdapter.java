@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -152,13 +153,21 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
+        try {
 
-        NovelInfo bookData = bookDatas.get(position);
-        Glide.with(holder.itemView).load(bookData.getCoverURL()).into(holder.coverImange);
-        holder.titleText.setText(bookData.getTitle());
-        holder.authorText.setText(bookData.getAuthor());
-        holder.descText.setText(bookData.getDesc());
-        holder.resultDetailLayout.setVisibility(bookData.isExpanded()?View.VISIBLE:View.GONE);
+            NovelInfo bookData = bookDatas.get(position);
+
+            Glide.with(holder.itemView).load(bookData.getCoverURL()).into(holder.coverImange);
+            holder.titleText.setText(bookData.getTitle());
+            holder.authorText.setText(bookData.getAuthor());
+            holder.descText.setText(bookData.getDesc());
+            holder.resultDetailLayout.setVisibility(bookData.isExpanded()?View.VISIBLE:View.GONE);
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
 
     }
 
