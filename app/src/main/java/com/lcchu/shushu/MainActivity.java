@@ -345,6 +345,8 @@ public class MainActivity extends AppCompatActivity {
         String mCategory ;
         getNovelList ( String Category ) { mCategory = Category; }
         public void run ( ) {
+
+//            https://tw.ttkan.co/api/nq/amp_novel_list?type=xuanhuan&limit=100
             try{
                 //TODO 抓分類小說
                 long t1,t2;

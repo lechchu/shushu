@@ -1,13 +1,9 @@
 package com.lcchu.shushu;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
@@ -80,8 +76,8 @@ public class ReadActivity extends AppCompatActivity {
     String bookName;
 
     int currentIndex = 0;
-    int scorllHistory = 0;
-    int textSize = 24;
+    int scrolled_histroy = 0;
+    int text_size = 24;
 
     boolean isExit=false;
     boolean switch_clock, switch_darkmode;
@@ -166,9 +162,9 @@ public class ReadActivity extends AppCompatActivity {
         txtsizeView = setting_layout.findViewById(R.id.fontsize_textview);
         chapterName = findViewById(R.id.chapternameView);
         tv1 = findViewById(R.id.textView);
-        editfontsize.setProgress(textSize);
+        editfontsize.setProgress(text_size);
 
-        txtsizeView.setText(String.valueOf(textSize));
+        txtsizeView.setText(String.valueOf(text_size));
 
         switchChapter = findViewById(R.id.loadLayout);
         switchChapter.setEnableLoadMore(true);
@@ -201,7 +197,7 @@ public class ReadActivity extends AppCompatActivity {
                 if(currentIndex-1<0)
                     Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
                 else {
-                    scorllHistory = 0;
+                    scrolled_histroy = 0;
                     book.updateChapter(chapterList.get(--currentIndex).get(1));
                     CAdapter.updateIndex(currentIndex);
 
@@ -223,7 +219,7 @@ public class ReadActivity extends AppCompatActivity {
                 if(currentIndex+1>=chapterList.size())
                     Toast.makeText(ReadActivity.this,"已是最後一章",Toast.LENGTH_LONG).show();
                 else {
-                    scorllHistory = 0;
+                    scrolled_histroy = 0;
                     book.updateChapter(chapterList.get(++currentIndex).get(1));
                     CAdapter.updateIndex(currentIndex);
 
@@ -288,7 +284,7 @@ public class ReadActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                textSize = seekBar.getProgress();
+                text_size = seekBar.getProgress();
                 handler.sendEmptyMessage(4);
             }
         });
@@ -333,23 +329,15 @@ public class ReadActivity extends AppCompatActivity {
 
     }
 
-    public void readCache(){
+    public void loadUserPref(){
 
         try {
-            FileInputStream fis = openFileInput(bookName+".cache");
-            byte[] readBytes = new byte[fis.available()];
-            fis.read(readBytes);
-            String readString = new String(readBytes);
-            String []data = readString.split(",");
+            // 閱讀紀錄
+            currentIndex = getSharedPreferences(bookName, MODE_PRIVATE).getInt("Index",0);
+            scrolled_histroy = getSharedPreferences(bookName, MODE_PRIVATE).getInt("Scrolled",0);
 
-            currentIndex = Integer.parseInt(data[0]);
-            scorllHistory = Integer.parseInt(data[1]);
-
-            fis.close();
-
-
-
-            textSize = getSharedPreferences("user_setting", MODE_PRIVATE).getInt("FontSize", 24);
+            // 偏好設定
+            text_size = getSharedPreferences("user_setting", MODE_PRIVATE).getInt("FontSize", 24);
             switch_clock = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("Clock", true);
             switch_darkmode = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("DarkMode", false);
 
@@ -432,9 +420,9 @@ public class ReadActivity extends AppCompatActivity {
         System.out.println("listener setup time:"+(t2-t1));
 
         t1 = System.currentTimeMillis();
-        readCache();
+        loadUserPref();
         t2 = System.currentTimeMillis();
-        System.out.println("read cache time:"+(t2-t1));
+        System.out.println("load pref time:"+(t2-t1));
 
         book = new BookData(bookName,"0");
 /*
@@ -446,7 +434,7 @@ public class ReadActivity extends AppCompatActivity {
         }catch (Exception e){e.printStackTrace();}
 */
 
-        new Thread(JsonReader).start();
+        new Thread(loadChapterList).start();
 
 
 
@@ -456,13 +444,11 @@ public class ReadActivity extends AppCompatActivity {
 
     public void saveHistory(){
         try{
-            String a = currentIndex + "," + storyScrollView.getScrollY();
 
-            FileOutputStream fos  = openFileOutput(bookName+".cache", Context.MODE_PRIVATE);
-
-
-            fos.write(a.getBytes());
-            fos.close();
+            getSharedPreferences(bookName, MODE_PRIVATE).edit()
+                    .putInt("Index", currentIndex)
+                    .putInt("Scrolled", storyScrollView.getScrollY())
+                    .apply();
 
         }catch (Exception e){e.printStackTrace();}
     }
@@ -471,10 +457,10 @@ public class ReadActivity extends AppCompatActivity {
         try{
 
             getSharedPreferences("user_setting", MODE_PRIVATE).edit()
-                    .putInt("FontSize", textSize)
+                    .putInt("FontSize", text_size)
                     .putBoolean("DarkMode",switch_darkmode)
                     .putBoolean("Clock",switch_clock)
-                    .commit();
+                    .apply();
         }catch (Exception e){e.printStackTrace();}
     }
 
@@ -507,7 +493,8 @@ public class ReadActivity extends AppCompatActivity {
         }
     };
 
-    Runnable JsonReader = new Runnable(){
+
+    Runnable loadChapterList = new Runnable(){
         @Override
         public void run() {
 
@@ -526,10 +513,10 @@ public class ReadActivity extends AppCompatActivity {
                     JSONArray chapterJson = new JSONObject(conn.get().text()).getJSONArray("items");
 
                     book.updateChapter(chapterJson.getJSONObject(currentIndex).getString("chapter_id"));
-                    System.out.println("make getStory start");
+                    System.out.println("make getStory start"); // 讀取章節過程中先讀取小說內容
                     new Thread(getStory).start();
-                    for(int i=0;i<chapterJson.length();i++){
 
+                    for(int i=0;i<chapterJson.length();i++){
 
                         chapterData = new ArrayList<>();
                         chapterData.add(chapterJson.getJSONObject(i).getString("chapter_name"));
@@ -545,7 +532,8 @@ public class ReadActivity extends AppCompatActivity {
                     CAdapter.setItemClickListener(new ChapterListAdapter.OnRecyclerViewClickListener() {
                         @Override
                         public void onItemClickListener(View view) {
-                            scorllHistory = 0;
+                            // 重置滑動紀錄
+                            scrolled_histroy = 0;
                             chapterListDrawer.closeDrawer(GravityCompat.START);
                             currentIndex = chapterListViewR.getChildAdapterPosition(view);
                             book.updateChapter(chapterList.get(currentIndex).get(1));
@@ -595,7 +583,6 @@ public class ReadActivity extends AppCompatActivity {
         if (isExit) {
             // ACTION_MAIN with category CATEGORY_HOME 啟動主屏幕
             saveTimer.cancel();
-//            System.exit(0);// 使虛擬機停止運行並退出程序
             this.finish();
         } else {
             isExit = true;
@@ -660,10 +647,10 @@ public class ReadActivity extends AppCompatActivity {
                     case 4:
                         darkmodeSwitch.setChecked(switch_darkmode);
                         clockSwitch.setChecked(switch_clock);
-                        tv1.setTextSize(textSize);
+                        tv1.setTextSize(text_size);
                         break;
                     case 5:
-                        storyScrollView.scrollTo(0,scorllHistory);
+                        storyScrollView.scrollTo(0, scrolled_histroy);
                         tv1.setVisibility(View.VISIBLE);
                         loadingDialog.dismiss();
                         break;
