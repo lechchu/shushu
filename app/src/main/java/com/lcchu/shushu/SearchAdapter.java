@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder> {
 
-    private ArrayList<NovelInfo> bookDatas;
+    private final ArrayList<NovelInfo> bookDatas;
 
 
     SearchAdapter(ArrayList<NovelInfo> data) {
@@ -40,23 +39,23 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     // 建立ViewHolder
     class ViewHolder extends RecyclerView.ViewHolder {
         // 宣告元件
-        private TextView titleText, authorText, descText;
-        private ImageView coverImange;
+        private final TextView title_text, author_text, desc_text;
+        private final ImageView cover_image;
 
         private ConstraintLayout resultDetailLayout;
 
 
         ViewHolder(View itemView) {
             super(itemView);
-            Button readBtn, addFavBtn;
-            titleText = itemView.findViewById(R.id.booknameTV);
-            authorText = itemView.findViewById(R.id.bookauthorTV);
-            descText = itemView.findViewById(R.id.bookdescTV);
-            coverImange = itemView.findViewById(R.id.bookcoverIV);
+            final Button read_btn, addfav_btn;
+            title_text = itemView.findViewById(R.id.booknameTV);
+            author_text = itemView.findViewById(R.id.bookauthorTV);
+            desc_text = itemView.findViewById(R.id.bookdescTV);
+            cover_image = itemView.findViewById(R.id.bookcoverIV);
 
             resultDetailLayout = itemView.findViewById(R.id.expandlayout);
-            readBtn = itemView.findViewById(R.id.startreadBtn);
-            addFavBtn = itemView.findViewById(R.id.addfavoriteBtn);
+            read_btn = itemView.findViewById(R.id.startreadBtn);
+            addfav_btn = itemView.findViewById(R.id.addfavoriteBtn);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -68,7 +67,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             });
 
 
-            readBtn.setOnClickListener(new View.OnClickListener() {
+            read_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent();
@@ -82,7 +81,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
                 }
             });
 
-            addFavBtn.setOnClickListener(new View.OnClickListener() {
+            addfav_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     //ArrayList<NovelInfo> favBooks = new ArrayList<NovelInfo>();
@@ -132,6 +131,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
                         }
 
                         Toast.makeText(v.getContext(),"加入成功",Toast.LENGTH_LONG).show();
+                        addfav_btn.setEnabled(false);
 
                     }catch (Exception e){e.printStackTrace();
                         Toast.makeText(v.getContext(),"加入失敗",Toast.LENGTH_LONG).show();
@@ -152,22 +152,21 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         try {
 
             NovelInfo bookData = bookDatas.get(position);
 
-            Glide.with(holder.itemView).load(bookData.getCoverURL()).into(holder.coverImange);
-            holder.titleText.setText(bookData.getTitle());
-            holder.authorText.setText(bookData.getAuthor());
-            holder.descText.setText(bookData.getDesc());
+            Glide.with(holder.itemView).load(bookData.getCoverURL()).into(holder.cover_image);
+            holder.title_text.setText(bookData.getTitle());
+            holder.author_text.setText(bookData.getAuthor());
+            holder.desc_text.setText(bookData.getDesc());
             holder.resultDetailLayout.setVisibility(bookData.isExpanded()?View.VISIBLE:View.GONE);
 
         }
         catch (Exception e){
             e.printStackTrace();
         }
-
 
     }
 

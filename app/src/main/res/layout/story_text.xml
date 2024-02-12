@@ -14,9 +14,11 @@
         android:id="@+id/textclock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#FF888888"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorTextWhite"
         android:visibility="gone"
         android:format24Hour="h:mm"
+        android:textSize="15sp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="20dp"
@@ -27,12 +29,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
+        android:textColor="@color/colorTextWhite"
         android:autoSizeTextType="uniform"
         android:maxLines="1"
         android:gravity="center"
         android:textStyle="bold"
-        android:textSize="15sp"
-        android:textColor="@color/colorTextWhite"/>
+        android:textSize="15sp" />
 
     <com.scwang.smart.refresh.layout.SmartRefreshLayout
         android:id="@+id/loadLayout"

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Objects;
 
 import android.annotation.SuppressLint;
@@ -23,7 +22,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     TabLayout tab;
 
-    String[] tabitem = {"xuanhuan", "lianzai", "suixuan", "xuanhuan", "gudaiyanqing", "chuanyuechongsheng", "dushi", "kehuan", "xianxia", "yanqing", "lishi", "lingyi", "xuanyi", "xuanhuan", "youxi", "qita"};
+    String[] tab_item = {"xuanhuan", "lianzai", "suixuan", "xuanhuan", "gudaiyanqing", "chuanyuechongsheng", "dushi", "kehuan", "xianxia", "yanqing", "lishi", "lingyi", "xuanyi", "xuanhuan", "youxi", "qita"};
 
     RecyclerView searchResultList;
     RecyclerView favoriteBooksList;
@@ -84,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else if (tab.getPosition()>0){
 
-                    new Thread (new getNovelList(tabitem[tab.getPosition()])).start();
+                    new Thread (new getNovelList(tab_item[tab.getPosition()])).start();
                     if(searchResultList.getVisibility()!=View.VISIBLE)
                         searchResultList.setVisibility(View.VISIBLE);
                     if(favoriteBooksList.getVisibility()==View.VISIBLE)
@@ -190,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadFavBooksJson(){
+        //TODO improve
 
         //String json = "{\"books\":[{\"name\":\"xianwujinyong-chuqiao\",\"title\":\"仙武金庸\",\"cover_url\":\"https://static.ttkan.co/cover/xianwujinyong-chuqiao.jpg\"},{\"name\":\"xiaoaojianghu-jinyong\",\"title\":\"笑傲江湖\",\"cover_url\":\"https://static.ttkan.co/cover/xiaoaojianghu.jpg\"}]}";
         String json;
@@ -284,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             try{
-                searchResult = new ArrayList<NovelInfo>();
+                searchResult = new ArrayList<>();
                 //TODO 抓排行榜
                 long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
@@ -296,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
                 t1 = System.currentTimeMillis();
 
                 String rankURL = "https://tw.ttkan.co/novel/rank/";
-                String rankType = "xuanhuan";
+//                String rankType = "xuanhuan";
 
                 Document doc = Jsoup.connect(rankURL).ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
@@ -357,24 +356,19 @@ public class MainActivity extends AppCompatActivity {
                 String allURL = "https://tw.ttkan.co/novel/class/";
                 String allType = mCategory;
 
-                Document doc = Jsoup.connect(allURL+allType).ignoreContentType(true).get();
+                Document doc = Jsoup.connect(allURL+allType+"&limit=100").ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println(t2-t1);
 
-                int infoIndex = 0;
+                int info_index = 0;
                 NovelInfo ni = null;
                 Elements temp = doc.select("li");
 
                 for (Element result : temp) {
-                    switch (infoIndex++) {
+                    switch (info_index++) {
                         case 0:
                             ni = new NovelInfo();
                             String[] name = result.select("a").attr("href").split("/");
-
-                            if(name[3]=="{{novel_id}}"){
-                                System.out.println("get");
-                                break;}
-//                            System.out.println(result.text());
                             ni.setName(name[3]);
                             ni.setCoverURL("https://static.ttkan.co/cover/" + ni.getName().split("-")[0] + ".jpg");
                             ni.setTitle(result.text());
@@ -384,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case 2:
                             ni.setDesc(result.text());
-                            infoIndex = 0;
+                            info_index = 0;
                             if(!ni.getName().equals("{{novel_id}}"))
                                 searchResult.add(ni);
                             break;

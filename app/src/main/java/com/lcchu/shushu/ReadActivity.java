@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,6 +47,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
@@ -96,7 +98,7 @@ public class ReadActivity extends AppCompatActivity {
 
     private Timer saveTimer;
 
-    boolean adOn = true;
+    boolean adOn = false;
 
 //UI
 
@@ -379,6 +381,7 @@ public class ReadActivity extends AppCompatActivity {
             public void onAdLoaded() {
                 // Code to be executed when an ad finishes loading.
                 mInterstitialAd.show();
+                Toast.makeText(ReadActivity.this, "彈出廣告", Toast.LENGTH_LONG).show();
             }
             @Override
             public void onAdClosed() {
@@ -390,13 +393,18 @@ public class ReadActivity extends AppCompatActivity {
                 // Code to be executed when the ad is displayed.
             }
 
+            @Override
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                Toast.makeText(ReadActivity.this, loadAdError.toString(), Toast.LENGTH_LONG).show();
+                super.onAdFailedToLoad(loadAdError);
+            }
         });
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         loadingDialog = new ProgressDialog(this);
-        loadingDialog.setMessage("努力加載中");
+        loadingDialog.setMessage("加載中");
         loadingDialog.show();
 
         System.out.println("started readactivty");
@@ -487,6 +495,7 @@ public class ReadActivity extends AppCompatActivity {
 
             } catch (IOException e) {
                 e.printStackTrace();
+                Toast.makeText(ReadActivity.this, "加載失敗，請確認網路環境", Toast.LENGTH_LONG).show();
             }
             System.out.println("start send story message");
             handler.sendEmptyMessage(0);
@@ -497,15 +506,12 @@ public class ReadActivity extends AppCompatActivity {
     Runnable loadChapterList = new Runnable(){
         @Override
         public void run() {
-
-
                 //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
 
                 try {
 
                     //TODO 加速讀章節
                     long t1,t2;
-
 
                     t1=System.currentTimeMillis();
                     Connection conn = Jsoup.connect(book.getChapterListURL()).ignoreContentType(true);
@@ -565,6 +571,12 @@ public class ReadActivity extends AppCompatActivity {
         }
     };
 
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        saveHistory();
+        super.onSaveInstanceState(outState, outPersistentState);
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
