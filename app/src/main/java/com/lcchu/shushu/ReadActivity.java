@@ -26,6 +26,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import androidx.annotation.NonNull;
@@ -84,6 +85,8 @@ public class ReadActivity extends AppCompatActivity {
     boolean isExit=false;
     boolean switch_clock, switch_darkmode;
 
+    String novel_content;
+
     BookData book;
 
 
@@ -118,7 +121,6 @@ public class ReadActivity extends AppCompatActivity {
     ProgressDialog loadingDialog;
     TextClock clock;
 
-    Elements title = new Elements();
 
 
 
@@ -486,11 +488,21 @@ public class ReadActivity extends AppCompatActivity {
                 okHttp = new OkHttpClient();
                 Request request = new Request.Builder().url(book.getBookURL()).get().build();
                 Document doc = Jsoup.parse(okHttp.newCall(request).execute().body().string());
+Document doc = Jsoup.connect("https://example.com")
+                    .ignoreContentType(true) // 忽略錯誤的 Content-Type
+                    .get();
+System.out.println(doc.outerHtml());
 
                  */
-                Document doc = Jsoup.connect(book.getBookURL()).ignoreContentType(true).get();
+                Document doc = Jsoup.connect(book.getBookURL()).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36").ignoreContentType(true).get();
 
-                title = doc.select("p");
+                Element novel_doc = doc.select("div.contents").first();
+                novel_doc.select("div").remove();
+                novel_content = novel_doc.html();
+                novel_content = novel_content.replaceAll("<p>", "\n");
+                novel_content = novel_content.replaceAll("</p>", "");
+
+
                 saveHistory();
 
             } catch (IOException e) {
@@ -514,22 +526,33 @@ public class ReadActivity extends AppCompatActivity {
                     long t1,t2;
 
                     t1=System.currentTimeMillis();
-                    Connection conn = Jsoup.connect(book.getChapterListURL()).ignoreContentType(true);
-                    chapterList = new ArrayList<>();
-                    JSONArray chapterJson = new JSONObject(conn.get().text()).getJSONArray("items");
+                    Document doc = Jsoup.connect(book.getChapterListURL()).ignoreContentType(true).get();
+                    Elements chapterList_temp = doc.select("div.content.gclearfix > ul >li");
+                    String chapter_id = chapterList_temp.get(currentIndex).select("a").attr("href").split("_")[1];
+                    book.updateChapter(chapter_id);
 
-                    book.updateChapter(chapterJson.getJSONObject(currentIndex).getString("chapter_id"));
                     System.out.println("make getStory start"); // 讀取章節過程中先讀取小說內容
+
                     new Thread(getStory).start();
-
-                    for(int i=0;i<chapterJson.length();i++){
-
+                    chapterList = new ArrayList<>();
+                    for(int i=0; i< chapterList_temp.size()-2;i++)
+                    {
                         chapterData = new ArrayList<>();
-                        chapterData.add(chapterJson.getJSONObject(i).getString("chapter_name"));
-                        chapterData.add(chapterJson.getJSONObject(i).getString("chapter_id"));
-                        chapterList.add(chapterData);
+                        try
+                        {
+                            Element chapterlist_element = chapterList_temp.get(i);
+                            chapter_id = chapterlist_element.select("a").attr("href").split("_")[1];
+                            chapterData.add(chapterlist_element.text());
+                            chapterData.add(chapter_id);
+                            chapterList.add(chapterData);
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
 
                     }
+
                     t2=System.currentTimeMillis();
                     System.out.println("load chapter time:"+(t2-t1));
 
@@ -636,8 +659,7 @@ public class ReadActivity extends AppCompatActivity {
                         t1 = System.currentTimeMillis();
                         System.out.println("Start load story");
                         tv1.setText("\n\n\n");
-                        for (Element text : title)
-                            tv1.append(text.text()+"\n\n");
+                        tv1.append(novel_content);
                         t2= System.currentTimeMillis();
                         System.out.println("load story time: "+(t2-t1));
 

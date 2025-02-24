@@ -240,35 +240,24 @@ public class MainActivity extends AppCompatActivity {
 
 
                 t1 = System.currentTimeMillis();
-                Document doc = Jsoup.connect("https://tw.ttkan.co/novel/search?q="+bookKeyWord).ignoreContentType(true).get();
+                Document doc = Jsoup.connect("https://tw.mingzw.net/mzwlist/"+bookKeyWord+".html").ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println("get load page: "+(t2-t1));
 
                 int infoIndex = 0;
                 NovelInfo ni = null;
-                Elements temp = doc.select("li");
+                Elements temp = doc.select("div.figure-horizontal.figure-1");
 
-                    for (Element result : temp) {
-                        switch (infoIndex++) {
-                            case 0:
-                                ni = new NovelInfo();
-                                String[] name = result.select("a").attr("href").split("/");
-                                ni.setName(name[3]);
-                                ni.setCoverURL("https://static.ttkan.co/cover/" + ni.getName().split("-")[0] + ".jpg");
-                                ni.setTitle(result.text());
-                                break;
-                            case 1:
-                                ni.setAuthor(result.text());
-                                break;
-                            case 2:
-                                ni.setDesc(result.text());
-                                infoIndex = 0;
-                                searchResult.add(ni);
-                                break;
-                            default:
-                                break;
-                        }
-
+                    for (Element result : temp)
+                    {
+                        ni = new NovelInfo();
+                        String[] name = result.select("div.cont > h3 > a").attr("href").split("/");
+                        ni.setName(name[2].split("\\.")[0]);
+                        ni.setCoverURL("https://tw.mingzw.net/images/mzwid/" + ni.getName() + ".jpg");
+                        ni.setTitle(result.select("div.cont > h3 > a").text());
+                        ni.setAuthor(result.select("div.cont > dl:nth-child(2) > dd").text());
+                        ni.setDesc(result.select("div.cont > p").text());
+                        searchResult.add(ni);
                     }
 
             } catch (IOException e) {

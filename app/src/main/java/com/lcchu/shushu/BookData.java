@@ -10,18 +10,14 @@ public class BookData {
     BookData(String name,String chapter_id){
         bookName = name;
         chapterID = chapter_id;
-        bookURL="https://www.ttkan.co/novel/user/page_direct?novel_id="+ bookName + "&page=" + chapterID;
-
-//        bookURL="https://tw.kjasugn.top/novel/pagea/"+ bookName + "_" + chapterID + ".html";
-        coverURL = "https://static.ttkan.co/cover/" + bookName + ".jpg?w=100&h=130&q=100";
-        chapterListURL = "https://tw.ttkan.co/api/nq/amp_novel_chapters?language=tw&novel_id=" + bookName;
+        bookURL="https://tw.mingzw.net/mzwbook/"+ bookName + "/" + chapterID;
+        coverURL = "https://tw.mingzw.net/images/mzwid/" + bookName + ".jpg";
+        chapterListURL = "https://tw.mingzw.net/mzwchapter/"+ bookName;
     }
 
     public void updateChapter(String ID){
         chapterID = ID;
-        bookURL="https://www.ttkan.co/novel/user/page_direct?novel_id="+ bookName + "&page=" + chapterID;
-
-//        bookURL="https://tw.kjasugn.top/novel/pagea/"+ bookName + "_" + chapterID + ".html";
+        bookURL="https://tw.mingzw.net/mzwread/"+ bookName + "_" + chapterID;
     }
 
     public String getChapterID(){
