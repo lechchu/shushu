@@ -8,10 +8,11 @@ import java.util.Objects;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -26,6 +27,10 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.material.tabs.TabLayout;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -53,50 +58,55 @@ public class MainActivity extends AppCompatActivity {
 
     TabLayout tab;
 
-    String[] tab_item = {"xuanhuan", "lianzai", "suixuan", "xuanhuan", "gudaiyanqing", "chuanyuechongsheng", "dushi", "kehuan", "xianxia", "yanqing", "lishi", "lingyi", "xuanyi", "xuanhuan", "youxi", "qita"};
+    String[] tab_item = {"all", "全本", "玄幻", "奇幻", "武俠", "仙俠", "都市", "言情", "軍事", "游戲", "競技", "科幻", "靈異"};
 
-    RecyclerView searchResultList;
-    RecyclerView favoriteBooksList;
+    private RecyclerView searchResultList;
+    private RecyclerView favoriteBooksList;
 
     private AdView ad;
     boolean adOn = true;
 
     SearchAdapter SAdapter;
     FavoriteAdapter FAdapter;
+    private static final OkHttpClient client = OkHttpSingleton.getInstance();
 
+    private static String fetchHtml(String url) throws Exception {
+        Request request = new Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            return response.body().string();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     public void setupListener() {
 
         tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 loadingDialog = new ProgressDialog(MainActivity.this);
-                loadingDialog.setMessage("努力加載中");
+                loadingDialog.setMessage("加載中");
                 loadingDialog.show();
 
-                if(tab.getPosition()==1){
-                    new Thread(getRank).start();
-                    if(searchResultList.getVisibility()!=View.VISIBLE)
-                        searchResultList.setVisibility(View.VISIBLE);
-                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
-                        favoriteBooksList.setVisibility(View.GONE);
-                }
-                else if (tab.getPosition()>0){
-
-                    new Thread (new getNovelList(tab_item[tab.getPosition()])).start();
-                    if(searchResultList.getVisibility()!=View.VISIBLE)
-                        searchResultList.setVisibility(View.VISIBLE);
-                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
-                        favoriteBooksList.setVisibility(View.GONE);
-                }else{
-
+                if(tab.getPosition()==0){
                     loadingDialog.dismiss();
                     if (searchResultList.getVisibility() == View.VISIBLE){
                         searchResultList.setVisibility(View.GONE);
                         favoriteBooksList.setVisibility(View.VISIBLE);
-
                         uiUpdateHandler.sendEmptyMessage(1);
                         loadFavBooksJson();
                     }
+                }
+                else{
+
+                    new Thread (new getNovelList(tab_item[tab.getPosition()-1])).start();
+                    if(searchResultList.getVisibility()!=View.VISIBLE)
+                        searchResultList.setVisibility(View.VISIBLE);
+                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
+                        favoriteBooksList.setVisibility(View.GONE);
                 }
 
             }
@@ -114,34 +124,33 @@ public class MainActivity extends AppCompatActivity {
 
 
         //搜索鍵
-        bookkeyEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_SEARCH&& !bookkeyEdit.getText().toString().equals("")){
-                    bookKeyWord = bookkeyEdit.getText().toString();
-                    tab.setScrollPosition(0,0,true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
+            bookkeyEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if(actionId == EditorInfo.IME_ACTION_SEARCH&& !bookkeyEdit.getText().toString().equals("")){
+                        bookKeyWord = bookkeyEdit.getText().toString();
+                        tab.setScrollPosition(0,0,true);
 
-                    //hide ime after enter
-                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(Objects.requireNonNull(getCurrentFocus()).getWindowToken(), 0);
-                    bookkeyEdit.clearFocus();
+                        //hide ime after enter
+                        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(Objects.requireNonNull(getCurrentFocus()).getWindowToken(), 0);
+                        bookkeyEdit.clearFocus();
 
-                    loadingDialog = new ProgressDialog(MainActivity.this);
-                    loadingDialog.setMessage("努力加載中");
-                    loadingDialog.show();
+                        loadingDialog = new ProgressDialog(MainActivity.this);
+                        loadingDialog.setMessage("努力加載中");
+                        loadingDialog.show();
 
-                    new Thread(getSearchResult).start();
-                    //new Thread(getRank).start();
-                    //new Thread(getAll).start();
-                    if(searchResultList.getVisibility()!=View.VISIBLE)
-                        searchResultList.setVisibility(View.VISIBLE);
-                    if(favoriteBooksList.getVisibility()==View.VISIBLE)
-                        favoriteBooksList.setVisibility(View.GONE);
+                        new Thread(getSearchResult).start();
+                        if(searchResultList.getVisibility()!=View.VISIBLE)
+                            searchResultList.setVisibility(View.VISIBLE);
+                        if(favoriteBooksList.getVisibility()==View.VISIBLE)
+                            favoriteBooksList.setVisibility(View.GONE);
+                    }
+                    return false;
                 }
-                return false;
-            }
-        });
-
+            });
+        }
 
 
     }
@@ -179,12 +188,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        AdRequest adRequest = new AdRequest.Builder().build();
-        if(adOn)
+
+        if(adOn) {
+
+            ad = new AdView(this);
+            ad.setAdUnitId("ca-app-pub-3940256099942544/9214589741");
+            AdRequest adRequest = new AdRequest.Builder().build();
             ad.loadAd(adRequest);
+        }
 
-
-        //new Thread(getSearchResult).start();
+        // pre connect for speed up load chapter and content
+        new Thread(() -> {
+            try {
+                Request request = new Request.Builder()
+                        .url("https://tw.mingzw.net/") // 用輕量級 API 測試
+                        .build();
+                client.newCall(request).execute().close();
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     public void loadFavBooksJson(){
@@ -232,35 +253,37 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
-                long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
-                //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
+
                 //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
                 bookKeyWord = java.net.URLEncoder.encode(bookKeyWord,"UTF-8");
 
-
-                t1 = System.currentTimeMillis();
-                Document doc = Jsoup.connect("https://tw.mingzw.net/mzwlist/"+bookKeyWord+".html").ignoreContentType(true).get();
-                t2 = System.currentTimeMillis();
-                System.out.println("get load page: "+(t2-t1));
+                long startOkHttp = System.currentTimeMillis();
+                String html = fetchHtml("https://tw.mingzw.net/mzwlist/"+bookKeyWord+".html");
+                Document doc = Jsoup.parse(html);
+                long endOkHttp = System.currentTimeMillis();
+                Log.d("MainActivity","OkHttp + Jsoup 解析花費時間：" + (endOkHttp - startOkHttp) + "ms");
 
                 int infoIndex = 0;
                 NovelInfo ni = null;
                 Elements temp = doc.select("div.figure-horizontal.figure-1");
 
-                    for (Element result : temp)
-                    {
-                        ni = new NovelInfo();
-                        String[] name = result.select("div.cont > h3 > a").attr("href").split("/");
-                        ni.setName(name[2].split("\\.")[0]);
-                        ni.setCoverURL("https://tw.mingzw.net/images/mzwid/" + ni.getName() + ".jpg");
-                        ni.setTitle(result.select("div.cont > h3 > a").text());
-                        ni.setAuthor(result.select("div.cont > dl:nth-child(2) > dd").text());
-                        ni.setDesc(result.select("div.cont > p").text());
-                        searchResult.add(ni);
-                    }
+                for (Element result : temp)
+                {
+                    ni = new NovelInfo();
+                    String[] name = result.select("div.cont > h3 > a").attr("href").split("/");
+                    ni.setName(name[2].split("\\.")[0]);
+                    ni.setCoverURL("https://tw.mingzw.net/images/mzwid/" + ni.getName() + ".jpg");
+                    ni.setTitle(result.select("div.cont > h3 > a").text());
+                    ni.setAuthor(result.select("div.cont > dl:nth-child(2) > dd").text());
+                    ni.setDesc(result.select("div.cont > p").text().replaceAll("查看詳細>>", ""));
+                    searchResult.add(ni);
+                }
 
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+//                throw new RuntimeException(e);
                 e.printStackTrace();
             }
             SAdapter = new SearchAdapter(searchResult);
@@ -268,73 +291,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    Runnable getRank = new Runnable() {
-        @Override
-        public void run() {
-            try{
-                searchResult = new ArrayList<>();
-                //TODO 抓排行榜
-                long t1,t2;
-                uiUpdateHandler.sendEmptyMessage(1);
-                //https://tw.ttkan.co/novel/search?q=%E9%87%91%E5%BA%B8
-                //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
-               // bookKeyWord = java.net.URLEncoder.encode(bookKeyWord,"UTF-8");
-
-
-                t1 = System.currentTimeMillis();
-
-                String rankURL = "https://tw.ttkan.co/novel/rank/";
-//                String rankType = "xuanhuan";
-
-                Document doc = Jsoup.connect(rankURL).ignoreContentType(true).get();
-                t2 = System.currentTimeMillis();
-                System.out.println(t2-t1);
-
-                int infoIndex = 0;
-                NovelInfo ni = null;
-                Elements temp = doc.select("li");
-
-                for (Element result : temp) {
-                    switch (infoIndex++) {
-                        case 0:
-                            ni = new NovelInfo();
-                            String[] name = result.select("a").attr("href").split("/");
-                            ni.setName(name[3]);
-                            ni.setCoverURL("https://static.ttkan.co/cover/" + ni.getName().split("-")[0] + ".jpg");
-                            ni.setTitle(result.text());
-                            break;
-                        case 1:
-                            ni.setAuthor(result.text());
-                            break;
-                        case 2:
-                            //類別
-//                            Document desdoc = Jsoup.connect("https://tw.ttkan.co/novel/chapters/"+ni.getName()).ignoreContentType(true).get();
-//                            ni.setDesc("簡介: "+desdoc.select(".description").select(".p").text());
-                            ni.setDesc("簡介: ");
-                            break;
-                        case 3:
-                            //狀態:連載;完結
-                            infoIndex = 0;
-                            searchResult.add(ni);
-                            break;
-                        default:
-                            break;
-                    }
-
-                }
-                SAdapter = new SearchAdapter(searchResult);
-                uiUpdateHandler.sendEmptyMessage(0);
-            }catch (Exception e){e.printStackTrace();}
-        }
-    };
-
-
     class getNovelList implements Runnable {
         String mCategory ;
         getNovelList ( String Category ) { mCategory = Category; }
         public void run ( ) {
 
-//            https://tw.ttkan.co/api/nq/amp_novel_list?type=xuanhuan&limit=100
             try{
                 //TODO 抓分類小說
                 long t1,t2;
@@ -342,46 +303,39 @@ public class MainActivity extends AppCompatActivity {
 
                 t1 = System.currentTimeMillis();
 
-                String allURL = "https://tw.ttkan.co/novel/class/";
-                String allType = mCategory;
+                String allURL = "https://tw.mingzw.net/mzwlist/";
+                String allType = java.net.URLEncoder.encode(mCategory,"UTF-8");
 
-                Document doc = Jsoup.connect(allURL+allType+"&limit=100").ignoreContentType(true).get();
+                Document doc = Jsoup.connect(allURL+allType+".html").ignoreContentType(true).get();
                 t2 = System.currentTimeMillis();
                 System.out.println(t2-t1);
 
-                int info_index = 0;
+                int infoIndex = 0;
                 NovelInfo ni = null;
-                Elements temp = doc.select("li");
+                Elements temp = doc.select("div.figure-horizontal.figure-1");
 
-                for (Element result : temp) {
-                    switch (info_index++) {
-                        case 0:
-                            ni = new NovelInfo();
-                            String[] name = result.select("a").attr("href").split("/");
-                            ni.setName(name[3]);
-                            ni.setCoverURL("https://static.ttkan.co/cover/" + ni.getName().split("-")[0] + ".jpg");
-                            ni.setTitle(result.text());
-                            break;
-                        case 1:
-                            ni.setAuthor(result.text());
-                            break;
-                        case 2:
-                            ni.setDesc(result.text());
-                            info_index = 0;
-                            if(!ni.getName().equals("{{novel_id}}"))
-                                searchResult.add(ni);
-                            break;
-                        default:
-                            break;
-                    }
-
+                for (Element result : temp)
+                {
+                    ni = new NovelInfo();
+                    String[] name = result.select("div.cont > h3 > a").attr("href").split("/");
+                    ni.setName(name[2].split("\\.")[0]);
+                    ni.setCoverURL("https://tw.mingzw.net/images/mzwid/" + ni.getName() + ".jpg");
+                    ni.setTitle(result.select("div.cont > h3 > a").text());
+                    ni.setAuthor(result.select("div.cont > dl:nth-child(2) > dd").text());
+                    ni.setDesc(result.select("div.cont > p").text().replaceAll("查看詳細>>", ""));
+                    searchResult.add(ni);
                 }
-                SAdapter = new SearchAdapter(searchResult);
-                uiUpdateHandler.sendEmptyMessage(0);
-            }catch (Exception e){e.printStackTrace();}
 
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+//                throw new RuntimeException(e);
+                e.printStackTrace();
+            }
+            SAdapter = new SearchAdapter(searchResult);
+            uiUpdateHandler.sendEmptyMessage(0);
         }
-    }
+    };
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {

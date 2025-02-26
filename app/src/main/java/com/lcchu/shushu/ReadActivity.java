@@ -7,8 +7,11 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.PersistableBundle;
+import android.util.Log;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,11 +26,14 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Protocol;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -39,29 +45,26 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
-import com.google.android.gms.ads.LoadAdError;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.material.navigation.NavigationView;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Arrays;
 /*
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -78,7 +81,7 @@ public class ReadActivity extends AppCompatActivity {
 
     String bookName;
 
-    int currentIndex = 0;
+    private int currentIndex = 0;
     int scrolled_histroy = 0;
     int text_size = 24;
 
@@ -90,7 +93,8 @@ public class ReadActivity extends AppCompatActivity {
     BookData book;
 
 
-    ChapterListAdapter CAdapter;
+    private ChapterListAdapter CAdapter;
+    private ContentAdapter contentAdapter;
 
     ArrayList<ArrayList<String>> chapterList = new ArrayList<>();
     ArrayList<String> chapterData = new ArrayList<>();
@@ -102,6 +106,7 @@ public class ReadActivity extends AppCompatActivity {
     private Timer saveTimer;
 
     boolean adOn = false;
+    private static final OkHttpClient client = OkHttpSingleton.getInstance();
 
 //UI
 
@@ -110,48 +115,33 @@ public class ReadActivity extends AppCompatActivity {
 
     SmartRefreshLayout switchChapter;
 
-    TextView tv1, chapterName, txtsizeView;
+    private TextView tv1, chapterName, txtsizeView;
     ImageView bookCover;
     ScrollView storyScrollView;
     NavigationView chapterListView, settingView;
-    RecyclerView chapterListViewR;
+    private RecyclerView chapterListViewR;
+    private RecyclerView novelcontentView;
     DrawerLayout chapterListDrawer;
     SeekBar editfontsize;
     Switch darkmodeSwitch, clockSwitch;
     ProgressDialog loadingDialog;
     TextClock clock;
+    private ArrayList<Pair<Integer, String>> novelcontentList = new ArrayList<>();
+    private boolean isLoading = false;
+    private boolean isLoadingPreviousChapter = false;
+    private static String fetchHtml(String url) throws Exception {
+        Request request = new Request.Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0")
+                .build();
 
-
-
-
-/*
-    public static void trustEveryone() {
-        try {
-            HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
-
-            SSLContext context = SSLContext.getInstance("TLS");
-            context.init(null, new X509TrustManager[] { new X509TrustManager() {
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                }
-
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                }
-
-                public X509Certificate[] getAcceptedIssuers() {
-                    return new X509Certificate[0];
-                }
-            } }, new SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+        try (Response response = client.newCall(request).execute()) {
+            return response.body().string();
         } catch (Exception e) {
-            // e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
- */
 
     @SuppressLint("InflateParams")
     public void setupView(){
@@ -165,21 +155,28 @@ public class ReadActivity extends AppCompatActivity {
 
         txtsizeView = setting_layout.findViewById(R.id.fontsize_textview);
         chapterName = findViewById(R.id.chapternameView);
-        tv1 = findViewById(R.id.textView);
         editfontsize.setProgress(text_size);
 
         txtsizeView.setText(String.valueOf(text_size));
 
-        switchChapter = findViewById(R.id.loadLayout);
-        switchChapter.setEnableLoadMore(true);
-        switchChapter.setEnableRefresh(true);
-        switchChapter.setEnableAutoLoadMore(false);
-        switchChapter.setFooterTriggerRate((float)0.5);
-        switchChapter.setHeaderTriggerRate((float)0.5);
+//        switchChapter = findViewById(R.id.loadLayout);
+//        switchChapter.setEnableLoadMore(true);
+//        switchChapter.setEnableRefresh(true);
+//        switchChapter.setEnableAutoLoadMore(false);
+//        switchChapter.setFooterTriggerRate((float)0.5);
+//        switchChapter.setHeaderTriggerRate((float)0.5);
 
 
         storyScrollView = findViewById(R.id.storyscroll);
         story_layout = findViewById(R.id.story_layout);
+//        tv1 = findViewById(R.id.textView);
+
+//      RecyclerView Novel Content
+        novelcontentView = findViewById(R.id.content_recyclerView);
+        LinearLayoutManager novelcontent_layoutManager = new LinearLayoutManager(this);
+        novelcontentView.setLayoutManager(novelcontent_layoutManager);
+
+
 
         chapterListView = findViewById(R.id.chapterlist_navigation_view);
         settingView = findViewById(R.id.setting_navigation_view);
@@ -195,50 +192,50 @@ public class ReadActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     public void setupListener(){
 
-        switchChapter.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                if(currentIndex-1<0)
-                    Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
-                else {
-                    scrolled_histroy = 0;
-                    book.updateChapter(chapterList.get(--currentIndex).get(1));
-                    CAdapter.updateIndex(currentIndex);
-
-                    stroyRead = new Thread(getStory);
-                    stroyRead.start();
-                    try {
-                        stroyRead.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                switchChapter.finishRefresh();
-            }
-        });
-
-        switchChapter.setOnLoadMoreListener(new OnLoadMoreListener() {
-            @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                if(currentIndex+1>=chapterList.size())
-                    Toast.makeText(ReadActivity.this,"已是最後一章",Toast.LENGTH_LONG).show();
-                else {
-                    scrolled_histroy = 0;
-                    book.updateChapter(chapterList.get(++currentIndex).get(1));
-                    CAdapter.updateIndex(currentIndex);
-
-                    stroyRead = new Thread(getStory);
-                    stroyRead.start();
-                    try {
-                        stroyRead.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                switchChapter.finishLoadMore();
-
-            }
-        });
+//        switchChapter.setOnRefreshListener(new OnRefreshListener() {
+//            @Override
+//            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
+//                if(currentIndex-1<0)
+//                    Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
+//                else {
+//                    scrolled_histroy = 0;
+//                    book.updateChapter(chapterList.get(--currentIndex).get(1));
+//                    CAdapter.updateIndex(currentIndex);
+//
+//                    stroyRead = new Thread(getStory);
+//                    stroyRead.start();
+//                    try {
+//                        stroyRead.join();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                switchChapter.finishRefresh();
+//            }
+//        });
+//
+//        switchChapter.setOnLoadMoreListener(new OnLoadMoreListener() {
+//            @Override
+//            public void onLoadMore(RefreshLayout refreshLayout) {
+//                if(currentIndex+1>=chapterList.size())
+//                    Toast.makeText(ReadActivity.this,"已是最後一章",Toast.LENGTH_LONG).show();
+//                else {
+//                    scrolled_histroy = 0;
+//                    book.updateChapter(chapterList.get(++currentIndex).get(1));
+//                    CAdapter.updateIndex(currentIndex);
+//
+//                    stroyRead = new Thread(getStory);
+//                    stroyRead.start();
+//                    try {
+//                        stroyRead.join();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                switchChapter.finishLoadMore();
+//
+//            }
+//        });
 
         chapterListDrawer.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             @Override
@@ -251,7 +248,7 @@ public class ReadActivity extends AppCompatActivity {
 
         settingView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
                 chapterListDrawer.closeDrawer(GravityCompat.END);
                 settingDialog.show();
                 return false;
@@ -298,17 +295,13 @@ public class ReadActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 switch_darkmode=isChecked;
-                if(isChecked) {
-                    //storyScrollView.setBackgroundColor(Color.parseColor("#2C3E50"));
-
-                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#2C3E50")));
-                    tv1.setTextColor(Color.parseColor("#EAECEE"));
-                }else {
-                    //storyScrollView.setBackgroundColor(Color.parseColor("#FFFFFF"));
-                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#FFFFFF")));
-
-                    tv1.setTextColor(Color.parseColor("#666666"));
-                }
+//                if(isChecked) {
+//                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#2C3E50")));
+//                    tv1.setTextColor(Color.parseColor("#EAECEE"));
+//                }else {
+//                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#FFFFFF")));
+//                    tv1.setTextColor(Color.parseColor("#666666"));
+//                }
                 saveSetting();
                 }
 
@@ -319,17 +312,82 @@ public class ReadActivity extends AppCompatActivity {
             @SuppressLint("ResourceAsColor")
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                switch_clock=isChecked;
-                if(isChecked) {
-                    clock.setVisibility(View.VISIBLE);
-                }else {
-                    clock.setVisibility(View.GONE);
-                }
-                saveSetting();
+//                switch_clock=isChecked;
+//                if(isChecked) {
+//                    clock.setVisibility(View.VISIBLE);
+//                }else {
+//                    clock.setVisibility(View.GONE);
+//                }
+//                saveSetting();
             }
 
         });
 
+
+        novelcontentView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null) {
+                    int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+                    int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int currentPosition = contentAdapter.getChapterIndex(firstVisibleItem);
+                    if(currentIndex!=currentPosition) {
+                        currentIndex = currentPosition;
+                        CAdapter.updateIndex(currentIndex);
+                    }
+
+                    // 預載入下一章
+                    if ((lastVisibleItem == (totalItemCount - 1)) && !isLoading) {
+                        if(currentIndex==chapterList.size()-1)
+                            Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
+                        else {
+                            isLoadingPreviousChapter = false;
+                            book.updateChapter(chapterList.get(currentIndex + 1).get(1));
+                            stroyRead = new Thread(getStory);
+                            stroyRead.start();
+                            try {
+                                stroyRead.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    // 預載入上一章
+                    if (firstVisibleItem <= 1 && !isLoading) {
+                        if(currentIndex-1<0)
+                            Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
+                        else {
+                            isLoadingPreviousChapter = true;
+                            book.updateChapter(chapterList.get(currentIndex-1).get(1));
+                            stroyRead = new Thread(getStory);
+                            stroyRead.start();
+                            try {
+                                stroyRead.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+//                    Log.d("RecyclerView", "當前第一個可見的 Item 是：" + firstVisibleItem);
+//                    Log.d("RecyclerView", "當前最後可見的 Item 是：" + lastVisibleItem);
+//                    Log.d("RecyclerView", "當前總共的 Item 是：" + totalItemCount);
+//                    Log.d("RecyclerView", "當前Chapter ID 是：" + currentIndex);
+//                    Log.d("RecyclerView", "當前書名 是：" + currentPosition);
+
+                    try{
+                        getSharedPreferences(bookName, MODE_PRIVATE).edit()
+                                .putInt("Index", currentIndex)
+                                .putInt("Scrolled", recyclerView.computeVerticalScrollOffset())
+                                .apply();
+                    }catch (Exception e){e.printStackTrace();}
+                }
+
+            }
+        });
 
     }
 
@@ -349,7 +407,7 @@ public class ReadActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             e.printStackTrace();
-            saveHistory();
+//            saveHistory();
             saveSetting();
         }
     }
@@ -358,49 +416,34 @@ public class ReadActivity extends AppCompatActivity {
 
         saveTimer = new Timer();
 
-        saveTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                saveHistory();
-            }
-        }, 3000, 1000);
+//        saveTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                saveHistory();
+//            }
+//        }, 3000, 1000);
     }
 
     private void adLoad(){
-        final InterstitialAd mInterstitialAd;
-
-        MobileAds.initialize(this, new OnInitializationCompleteListener() {
-            @Override
-            public void onInitializationComplete(InitializationStatus initializationStatus) {}
-        });
-        mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId("ca-app-pub-3049736794394736/2698302682");
-
-
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
-        mInterstitialAd.setAdListener(new AdListener(){
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-                mInterstitialAd.show();
-                Toast.makeText(ReadActivity.this, "彈出廣告", Toast.LENGTH_LONG).show();
-            }
-            @Override
-            public void onAdClosed() {
-                // Load the next interstitial.
-                //mInterstitialAd.loadAd(new AdRequest.Builder().build());
-            }
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when the ad is displayed.
-            }
-
-            @Override
-            public void onAdFailedToLoad(LoadAdError loadAdError) {
-                Toast.makeText(ReadActivity.this, loadAdError.toString(), Toast.LENGTH_LONG).show();
-                super.onAdFailedToLoad(loadAdError);
-            }
-        });
+//        final InterstitialAd mInterstitialAd;
+//        AdRequest adRequest = new AdRequest.Builder().build();
+//        InterstitialAd.load(this,"ca-app-pub-3940256099942544/1033173712", adRequest,
+//                new InterstitialAdLoadCallback() {
+//                    @Override
+//                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+//                        // The mInterstitialAd reference will be null until
+//                        // an ad is loaded.
+//                        mInterstitialAd = interstitialAd;
+//                        Log.i(TAG, "onAdLoaded");
+//                    }
+//
+//                    @Override
+//                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+//                        // Handle the error
+//                        Log.d(TAG, loadAdError.toString());
+//                        mInterstitialAd = null;
+//                    }
+//                });
     }
 
     @Override
@@ -435,20 +478,9 @@ public class ReadActivity extends AppCompatActivity {
         System.out.println("load pref time:"+(t2-t1));
 
         book = new BookData(bookName,"0");
-/*
-        chapterLoad = new Thread(JsonReader);
-
-        try{
-            chapterLoad.start();
-            chapterLoad.join();
-        }catch (Exception e){e.printStackTrace();}
-*/
-
+        contentAdapter = new ContentAdapter(novelcontentList);
+        novelcontentView.setAdapter(contentAdapter);
         new Thread(loadChapterList).start();
-
-
-
-        //new Thread(getCover).start();
         setSaveTimer();
     }
 
@@ -478,39 +510,47 @@ public class ReadActivity extends AppCompatActivity {
         @Override
         public void run() {
 
-
-            handler.sendEmptyMessage(3);
+            isLoading = true;
             try {
                 System.out.println("start load story-thread");
-                //trustEveryone();
-                //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
-                /*
-                okHttp = new OkHttpClient();
-                Request request = new Request.Builder().url(book.getBookURL()).get().build();
-                Document doc = Jsoup.parse(okHttp.newCall(request).execute().body().string());
-Document doc = Jsoup.connect("https://example.com")
-                    .ignoreContentType(true) // 忽略錯誤的 Content-Type
-                    .get();
-System.out.println(doc.outerHtml());
 
-                 */
-                Document doc = Jsoup.connect(book.getBookURL()).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36").ignoreContentType(true).get();
+
+                long startOkHttp = System.currentTimeMillis();
+                String html = fetchHtml(book.getBookURL());
+                Document doc = Jsoup.parse(html);
+                long endOkHttp = System.currentTimeMillis();
+                Log.d("ReadActivity","OkHttp + Jsoup 文章解析花費時間：" + (endOkHttp - startOkHttp) + "ms");
 
                 Element novel_doc = doc.select("div.contents").first();
                 novel_doc.select("div").remove();
                 novel_content = novel_doc.html();
                 novel_content = novel_content.replaceAll("<p>", "\n");
                 novel_content = novel_content.replaceAll("</p>", "");
+                novel_content = novel_content.replaceAll("明智屋中文 wWw.MinGzw.Net 沒有彈窗,更新及時", "");
+                novel_content = novel_content.replaceAll("mayiwsk", "");
+                novel_content = novel_content.replaceAll("←→", "");
 
 
-                saveHistory();
+//                saveHistory();
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(ReadActivity.this, "加載失敗，請確認網路環境", Toast.LENGTH_LONG).show();
             }
             System.out.println("start send story message");
-            handler.sendEmptyMessage(0);
+            Handler handler = new Handler(Looper.getMainLooper());
+            if(!isLoadingPreviousChapter){
+                handler.postDelayed(() -> contentAdapter.insertNextChapter(currentIndex + 1, novel_content), 100);
+            }else
+                handler.postDelayed(() -> contentAdapter.insertPreviousChapter(currentIndex - 1, novel_content), 100);
+//                runOnUiThread(() -> contentAdapter.insertNextChapter(currentIndex+1,novel_content));
+//            else
+//                runOnUiThread(() -> contentAdapter.insertPreviousChapter(currentIndex-1,novel_content));
+            handler.postDelayed(() -> isLoading = false, 100);
+//            isLoading = false;
+
+            Log.d("ReadActivity", "getStory: Data added to adapter, novelcontentList size: " + novelcontentList.size());
+//            handler.sendEmptyMessage(0);
         }
     };
 
@@ -522,17 +562,23 @@ System.out.println(doc.outerHtml());
 
                 try {
 
-                    //TODO 加速讀章節
-                    long t1,t2;
+                    long startOkHttp = System.currentTimeMillis();
+                    String html = fetchHtml(book.getChapterListURL());
+                    long temp = System.currentTimeMillis();
+                    Log.d("ReadActivity","OkHttp 章節解析花費時間：" + (temp - startOkHttp) + "ms");
 
-                    t1=System.currentTimeMillis();
-                    Document doc = Jsoup.connect(book.getChapterListURL()).ignoreContentType(true).get();
+                    long startsc = System.currentTimeMillis();
+                    String html2 = fetchHtml("https://www.mingzw.net/mzwbook/41935.html");
+                    long endsc = System.currentTimeMillis();
+                    Log.d("ReadActivity","OkHttp SC章節解析花費時間：" + (endsc - startsc) + "ms");
+
+                    Document doc = Jsoup.parse(html);
+                    long endOkHttp = System.currentTimeMillis();
+                    Log.d("ReadActivity","Jsoup 章節解析花費時間：" + (endOkHttp - temp) + "ms");
+
                     Elements chapterList_temp = doc.select("div.content.gclearfix > ul >li");
                     String chapter_id = chapterList_temp.get(currentIndex).select("a").attr("href").split("_")[1];
                     book.updateChapter(chapter_id);
-
-                    System.out.println("make getStory start"); // 讀取章節過程中先讀取小說內容
-
                     new Thread(getStory).start();
                     chapterList = new ArrayList<>();
                     for(int i=0; i< chapterList_temp.size()-2;i++)
@@ -552,9 +598,6 @@ System.out.println(doc.outerHtml());
                         }
 
                     }
-
-                    t2=System.currentTimeMillis();
-                    System.out.println("load chapter time:"+(t2-t1));
 
 
                     CAdapter = new ChapterListAdapter(chapterList,currentIndex);
@@ -597,7 +640,7 @@ System.out.println(doc.outerHtml());
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        saveHistory();
+//        saveHistory();
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
@@ -607,7 +650,7 @@ System.out.println(doc.outerHtml());
             ToQuitTheApp();
             return false;
         } else if (keyCode == KeyEvent.KEYCODE_HOME||keyCode == KeyEvent.KEYCODE_APP_SWITCH) {
-            saveHistory();
+//            saveHistory();
             return false;
         } else
             return super.onKeyDown(keyCode, event);
@@ -655,38 +698,40 @@ System.out.println(doc.outerHtml());
                 switch (msg.what) {
 
                     case 0:
-                        long t1,t2;
-                        t1 = System.currentTimeMillis();
-                        System.out.println("Start load story");
-                        tv1.setText("\n\n\n");
-                        tv1.append(novel_content);
-                        t2= System.currentTimeMillis();
-                        System.out.println("load story time: "+(t2-t1));
+//                        long t1,t2;
+//                        t1 = System.currentTimeMillis();
+//                        System.out.println("Start load story");
+//                        tv1.setText("\n\n\n");
+//                        tv1.append(novel_content);
+//                        t2= System.currentTimeMillis();
+//                        System.out.println("load story time: "+(t2-t1));
+//                        contentAdapter.addChapter(novel_content);
+//                        chapterName.setText(chapterList.get(currentIndex).get(0));
+//                        handler.sendEmptyMessageDelayed(5, 300);
 
-                        chapterName.setText(chapterList.get(currentIndex).get(0));
-                        handler.sendEmptyMessageDelayed(5, 300);
 
                         break;
 
                     case 1:
                         chapterListViewR.setAdapter(CAdapter);
                         chapterListViewR.scrollToPosition(currentIndex);
+                        loadingDialog.dismiss();
                         break;
                     case 2:
                         //bookCover.setImageBitmap(cover);
                         break;
                     case 3:
-                        tv1.setVisibility(View.INVISIBLE);
+//                        tv1.setVisibility(View.INVISIBLE);
                         break;
                     case 4:
                         darkmodeSwitch.setChecked(switch_darkmode);
                         clockSwitch.setChecked(switch_clock);
-                        tv1.setTextSize(text_size);
+//                        tv1.setTextSize(text_size);
                         break;
                     case 5:
-                        storyScrollView.scrollTo(0, scrolled_histroy);
-                        tv1.setVisibility(View.VISIBLE);
-                        loadingDialog.dismiss();
+//                        storyScrollView.scrollTo(0, scrolled_histroy);
+//                        tv1.setVisibility(View.VISIBLE);
+
                         break;
 
                     case 9:
@@ -702,5 +747,6 @@ System.out.println(doc.outerHtml());
 
         }
     };
+
 
 }

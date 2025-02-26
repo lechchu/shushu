@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.lcchu.shushu">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -12,7 +13,8 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3049736794394736~2875478220"/>
-        <activity android:name="com.lcchu.shushu.MainActivity">
+        <activity android:name="com.lcchu.shushu.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,6 +25,6 @@
         <activity android:name="com.lcchu.shushu.ReadActivity"
             >
         </activity>
+
     </application>
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
