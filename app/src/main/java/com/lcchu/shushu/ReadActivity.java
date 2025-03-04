@@ -1,30 +1,21 @@
 package com.lcchu.shushu;
 
-import java.io.IOException;
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.os.PersistableBundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
-import android.widget.Switch;
-import android.widget.TextClock;
 import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,11 +24,11 @@ import org.jsoup.select.Elements;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.Protocol;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -46,62 +37,49 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
-import com.scwang.smart.refresh.layout.SmartRefreshLayout;
-import com.scwang.smart.refresh.layout.api.RefreshLayout;
-import com.scwang.smart.refresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Arrays;
-/*
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.X509TrustManager;
-*/
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ReadActivity extends AppCompatActivity {
 
-    String bookName;
+    private String bookID;
 
     private int currentIndex = 0;
-    int scrolled_histroy = 0;
+    private int scrolled_history = 0;
     int text_size = 24;
 
     boolean isExit=false;
-    boolean switch_clock, switch_darkmode;
+    boolean switch_clock, switch_nightmode;
 
-    String novel_content;
-
-    BookData book;
+    private String novel_content;
+    private BookData book;
 
 
     private ChapterListAdapter CAdapter;
     private ContentAdapter contentAdapter;
 
-    ArrayList<ArrayList<String>> chapterList = new ArrayList<>();
-    ArrayList<String> chapterData = new ArrayList<>();
+    private ArrayList<ArrayList<String>> chapterList = new ArrayList<>();
+    private ArrayList<String> chapterData = new ArrayList<>();
 
-    Thread chapterLoad, stroyRead;
+    Thread chapterLoad, storyRead_thread;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable updateRunnable = null;  // 🔹 先初始化為 null
 
-    AlertDialog settingDialog;
+    private AlertDialog progressDialog;
+    private AlertDialog.Builder alert_builder;
 
     private Timer saveTimer;
 
@@ -109,26 +87,32 @@ public class ReadActivity extends AppCompatActivity {
     private static final OkHttpClient client = OkHttpSingleton.getInstance();
 
 //UI
-
-
-    View setting_layout,story_layout;
-
-    SmartRefreshLayout switchChapter;
-
-    private TextView tv1, chapterName, txtsizeView;
+    private View story_layout;
+    private TextView tv1, chapterName, clock;
     ImageView bookCover;
     ScrollView storyScrollView;
     NavigationView chapterListView, settingView;
     private RecyclerView chapterListViewR;
     private RecyclerView novelcontentView;
     DrawerLayout chapterListDrawer;
+    private LinearLayoutManager chapterlist_layoutManager;
     SeekBar editfontsize;
-    Switch darkmodeSwitch, clockSwitch;
-    ProgressDialog loadingDialog;
-    TextClock clock;
+    // Setting UI Define
+    private View setting_layout;
+    private SwitchMaterial switchNightMode, switchClock;
+    private MaterialButton buttonIncreaseFont, buttonDecreaseFont;
+    private SharedPreferences settings_preferences;
+    private TextView textFontSizeValue;
+    private BottomSheetDialog settings_bottomSheetDialog;
+    // Novel Content
     private ArrayList<Pair<Integer, String>> novelcontentList = new ArrayList<>();
+    private LinearLayoutManager novelcontent_layoutManager;
     private boolean isLoading = false;
+    private boolean isPreLoading = false;
     private boolean isLoadingPreviousChapter = false;
+    private boolean isUserScrolling = false;
+
+
     private static String fetchHtml(String url) throws Exception {
         Request request = new Request.Builder()
                 .url(url)
@@ -137,6 +121,8 @@ public class ReadActivity extends AppCompatActivity {
 
         try (Response response = client.newCall(request).execute()) {
             return response.body().string();
+        } catch (SocketTimeoutException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -147,34 +133,30 @@ public class ReadActivity extends AppCompatActivity {
     public void setupView(){
         bookCover = findViewById(R.id.cover_imageView);
 
-        setting_layout = LayoutInflater.from(ReadActivity.this).inflate(R.layout.setting, null);
-        editfontsize = setting_layout.findViewById(R.id.fontsize_seekbar);
-        darkmodeSwitch = setting_layout.findViewById(R.id.switch_darkmode);
-        clockSwitch = setting_layout.findViewById(R.id.switch_clock);
         clock = findViewById(R.id.textclock);
 
-        txtsizeView = setting_layout.findViewById(R.id.fontsize_textview);
+        // Settings
+        setting_layout = getLayoutInflater().inflate(R.layout.settings_bottom_sheet, null);
+        settings_bottomSheetDialog = new BottomSheetDialog(ReadActivity.this);
+        settings_bottomSheetDialog.setContentView(setting_layout);
+        switchNightMode = setting_layout.findViewById(R.id.switch_night_mode);
+        switchClock = setting_layout.findViewById(R.id.switch_clock);
+        buttonIncreaseFont = setting_layout.findViewById(R.id.button_increase_font);
+        buttonDecreaseFont = setting_layout.findViewById(R.id.button_decrease_font);
+        textFontSizeValue = setting_layout.findViewById(R.id.text_font_size_value);
+
+
+
+
         chapterName = findViewById(R.id.chapternameView);
-        editfontsize.setProgress(text_size);
-
-        txtsizeView.setText(String.valueOf(text_size));
-
-//        switchChapter = findViewById(R.id.loadLayout);
-//        switchChapter.setEnableLoadMore(true);
-//        switchChapter.setEnableRefresh(true);
-//        switchChapter.setEnableAutoLoadMore(false);
-//        switchChapter.setFooterTriggerRate((float)0.5);
-//        switchChapter.setHeaderTriggerRate((float)0.5);
-
-
         storyScrollView = findViewById(R.id.storyscroll);
         story_layout = findViewById(R.id.story_layout);
-//        tv1 = findViewById(R.id.textView);
 
 //      RecyclerView Novel Content
         novelcontentView = findViewById(R.id.content_recyclerView);
-        LinearLayoutManager novelcontent_layoutManager = new LinearLayoutManager(this);
+        novelcontent_layoutManager = new LinearLayoutManager(this);
         novelcontentView.setLayoutManager(novelcontent_layoutManager);
+        novelcontentView.setClickable(true);
 
 
 
@@ -184,210 +166,204 @@ public class ReadActivity extends AppCompatActivity {
         chapterListDrawer = findViewById(R.id.drawerLayout);
         chapterListViewR = findViewById(R.id.chapterlist_RecyclerView);
 
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        chapterListViewR.setLayoutManager(layoutManager);
+        chapterlist_layoutManager = new LinearLayoutManager(this);
+        chapterListViewR.setLayoutManager(chapterlist_layoutManager);
         chapterListViewR.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+
+        // Loading Dialog
+        alert_builder = new AlertDialog.Builder(this);
+        alert_builder.setView(R.layout.dialog_progress);
+        alert_builder.setCancelable(false); // 禁止取消
+        progressDialog = alert_builder.create();
     }
 
     @SuppressLint("ClickableViewAccessibility")
     public void setupListener(){
 
-//        switchChapter.setOnRefreshListener(new OnRefreshListener() {
-//            @Override
-//            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-//                if(currentIndex-1<0)
-//                    Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
-//                else {
-//                    scrolled_histroy = 0;
-//                    book.updateChapter(chapterList.get(--currentIndex).get(1));
-//                    CAdapter.updateIndex(currentIndex);
-//
-//                    stroyRead = new Thread(getStory);
-//                    stroyRead.start();
-//                    try {
-//                        stroyRead.join();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                switchChapter.finishRefresh();
-//            }
-//        });
-//
-//        switchChapter.setOnLoadMoreListener(new OnLoadMoreListener() {
-//            @Override
-//            public void onLoadMore(RefreshLayout refreshLayout) {
-//                if(currentIndex+1>=chapterList.size())
-//                    Toast.makeText(ReadActivity.this,"已是最後一章",Toast.LENGTH_LONG).show();
-//                else {
-//                    scrolled_histroy = 0;
-//                    book.updateChapter(chapterList.get(++currentIndex).get(1));
-//                    CAdapter.updateIndex(currentIndex);
-//
-//                    stroyRead = new Thread(getStory);
-//                    stroyRead.start();
-//                    try {
-//                        stroyRead.join();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                switchChapter.finishLoadMore();
-//
-//            }
-//        });
-
         chapterListDrawer.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
             @Override
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                chapterListViewR.smoothScrollToPosition(currentIndex);
+
 
             }
         });
 
-        settingView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        chapterName.setOnTouchListener((v,event)->{
+            Log.d("ReadActivity", "chapter name touch");
+            return true;
+        });
+        novelcontentView.setOnClickListener(v -> {
+//            settings_bottomSheetDialog.show();
+            Log.d("ReadActivity", "long click");
+        });
+        // 設定開關監聽事件
+        switchNightMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            saveSetting("DarkMode", isChecked);
+            applyNightMode(isChecked);
+        });
+
+        switchClock.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            saveSetting("Clock", isChecked);
+            switch_clock=isChecked;
+            applyClockVisibility(isChecked);
+        });
+
+        // 字體調整按鈕
+        buttonIncreaseFont.setOnClickListener(v -> {
+            if (text_size < 48) {  // 限制最大字體
+                text_size ++;
+                updateFontSize();
+            }
+        });
+
+        buttonDecreaseFont.setOnClickListener(v -> {
+            if (text_size > 12) {  // 限制最小字體
+                text_size --;
+                updateFontSize();
+            }
+        });
+        final GestureDetector chapterlist_gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
             @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
-                chapterListDrawer.closeDrawer(GravityCompat.END);
-                settingDialog.show();
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+                float deltaX = e2.getX() - e1.getX();
+                float deltaY = e1.getY() - e2.getY();
+                int recyclerViewWidth = getResources().getDisplayMetrics().widthPixels;
+                int recyclerViewHeight = getResources().getDisplayMetrics().heightPixels;
+
+                // 檢查手勢是從右向左滑動
+                if (e1.getX() < e2.getX()&&(Math.abs(deltaX) > (float) recyclerViewWidth / 2.5)&&(Math.abs(deltaY) < (float) recyclerViewHeight / 10)) {
+                    // 右滑手勢，打開 Drawer
+                    if (!chapterListDrawer.isDrawerOpen(GravityCompat.START)) {
+                        chapterListDrawer.openDrawer(GravityCompat.START);
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public boolean onSingleTapUp(@NonNull MotionEvent e) {
+                Log.d("ReadActivity", "single tap");
+                int recyclerViewWidth = getResources().getDisplayMetrics().widthPixels;
+                int recyclerViewHeight = getResources().getDisplayMetrics().heightPixels;
+                int centerX = recyclerViewWidth / 2;
+                int centerY = recyclerViewHeight / 2;
+                float x = e.getRawX();  // 觸摸點的 X 座標
+                float y = e.getRawY();  // 觸摸點的 Y 座標
+                boolean isInCenter = Math.abs(x - centerX) < (float) recyclerViewWidth / 5 && Math.abs(y - centerY) < (float) recyclerViewHeight / 6;
+                if (isInCenter) {
+                    settings_bottomSheetDialog.show();
+                    return true;
+                }
                 return false;
             }
         });
 
-        //語法一：new AlertDialog.Builder(主程式類別).XXX.XXX.XXX;
-        final AlertDialog.Builder builder = new AlertDialog.Builder(ReadActivity.this);
-        // Set icon value.
-        // Set title value.
-        builder.setTitle("設定");
-        builder.setView(setting_layout);
-        builder.setCancelable(true);
-        settingDialog = builder.create();
 
-
-        settingDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                saveSetting();
+        novelcontentView.setOnTouchListener((v, event) -> {
+            boolean gestureHandled = chapterlist_gestureDetector.onTouchEvent(event);
+            // 判斷觸摸點是否在 RecyclerView 的中間
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                isUserScrolling = true;  // 使用者開始手動滑動
             }
+            return gestureHandled;
         });
-
-        editfontsize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                txtsizeView.setText(String.valueOf(progress));
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                text_size = seekBar.getProgress();
-                handler.sendEmptyMessage(4);
-            }
-        });
-
-        darkmodeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @SuppressLint("ResourceAsColor")
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                switch_darkmode=isChecked;
-//                if(isChecked) {
-//                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#2C3E50")));
-//                    tv1.setTextColor(Color.parseColor("#EAECEE"));
-//                }else {
-//                    story_layout.setBackground(new ColorDrawable(Color.parseColor("#FFFFFF")));
-//                    tv1.setTextColor(Color.parseColor("#666666"));
-//                }
-                saveSetting();
-                }
-
-
-        });
-
-        clockSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @SuppressLint("ResourceAsColor")
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                switch_clock=isChecked;
-//                if(isChecked) {
-//                    clock.setVisibility(View.VISIBLE);
-//                }else {
-//                    clock.setVisibility(View.GONE);
-//                }
-//                saveSetting();
-            }
-
-        });
-
-
         novelcontentView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager != null) {
-                    int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
-                    int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
-                    int totalItemCount = layoutManager.getItemCount();
-                    int currentPosition = contentAdapter.getChapterIndex(firstVisibleItem);
-                    if(currentIndex!=currentPosition) {
-                        currentIndex = currentPosition;
-                        CAdapter.updateIndex(currentIndex);
-                    }
+//                Log.d("ReadActivity", "isUserScrolling:"+isUserScrolling);
+                if (!isUserScrolling||isLoading) {
+//                    Log.d("ReadActivity", "returning isUserScrolling: "+isUserScrolling);
+                    return;  // **忽略非用戶觸發的滑動**
+                }
+                // 取消舊的防抖執行
 
-                    // 預載入下一章
-                    if ((lastVisibleItem == (totalItemCount - 1)) && !isLoading) {
-                        if(currentIndex==chapterList.size()-1)
-                            Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
-                        else {
-                            isLoadingPreviousChapter = false;
-                            book.updateChapter(chapterList.get(currentIndex + 1).get(1));
-                            stroyRead = new Thread(getStory);
-                            stroyRead.start();
-                            try {
-                                stroyRead.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                if (updateRunnable != null) {
+                    handler.removeCallbacks(updateRunnable);
+                }
+                updateRunnable = () -> {
+                    LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    if (layoutManager != null) {
+                        int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+                        int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+                        int totalItemCount = layoutManager.getItemCount();
+                        int currentPosition = contentAdapter.getChapterIndex(firstVisibleItem);
+                        if (currentIndex != currentPosition) {
+                            currentIndex = currentPosition;
+                            CAdapter.updateIndex(currentIndex);
+                            handler.postDelayed(() -> chapterName.setText(chapterList.get(currentIndex).get(0)), 50);
+                        }
+
+                        // 預載入下一章
+                        if ((firstVisibleItem == (totalItemCount - 1)) && !isLoading) {
+                            isLoading = true;
+                            isPreLoading = true;
+                            if (currentIndex == chapterList.size() - 1)
+                                showToast("已是倒數第二章");
+                            else {
+                                isLoadingPreviousChapter = false;
+                                book.updateChapter(chapterList.get(currentIndex + 1).get(1));
+                                storyRead_thread = new Thread(getStory);
+                                storyRead_thread.start();
+                                try {
+                                    storyRead_thread.join();
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                         }
-                    }
 
-                    // 預載入上一章
-                    if (firstVisibleItem <= 1 && !isLoading) {
-                        if(currentIndex-1<0)
-                            Toast.makeText(ReadActivity.this,"已是第一章",Toast.LENGTH_LONG).show();
-                        else {
-                            isLoadingPreviousChapter = true;
-                            book.updateChapter(chapterList.get(currentIndex-1).get(1));
-                            stroyRead = new Thread(getStory);
-                            stroyRead.start();
-                            try {
-                                stroyRead.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                        // 預載入上一章
+                        if (lastVisibleItem == 0 && !isLoading) {
+                            isLoading = true;
+                            isPreLoading = true;
+                            if (currentIndex - 1 < 0)
+                                showToast("已是第一章");
+                            else {
+                                isLoadingPreviousChapter = true;
+                                book.updateChapter(chapterList.get(currentIndex - 1).get(1));
+                                storyRead_thread = new Thread(getStory);
+                                storyRead_thread.start();
+                                try {
+                                    storyRead_thread.join();
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                         }
-                    }
 
 //                    Log.d("RecyclerView", "當前第一個可見的 Item 是：" + firstVisibleItem);
 //                    Log.d("RecyclerView", "當前最後可見的 Item 是：" + lastVisibleItem);
 //                    Log.d("RecyclerView", "當前總共的 Item 是：" + totalItemCount);
-//                    Log.d("RecyclerView", "當前Chapter ID 是：" + currentIndex);
+                    Log.d("RecyclerView", "當前Chapter Index 是：" + currentIndex);
 //                    Log.d("RecyclerView", "當前書名 是：" + currentPosition);
-
-                    try{
-                        getSharedPreferences(bookName, MODE_PRIVATE).edit()
-                                .putInt("Index", currentIndex)
-                                .putInt("Scrolled", recyclerView.computeVerticalScrollOffset())
-                                .apply();
-                    }catch (Exception e){e.printStackTrace();}
-                }
+                        int scrolled = novelcontent_layoutManager.findViewByPosition(firstVisibleItem).getTop();
+                        try {
+                            Log.d("ReadActivity", "saveHistory");
+                            getSharedPreferences(bookID, MODE_PRIVATE).edit()
+                                    .putInt("Index", currentIndex)
+                                    .putInt("Scrolled", scrolled)
+                                    .apply();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                handler.postDelayed(updateRunnable,30);
 
             }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    isUserScrolling = false;  // **停止滑動時重置**
+                }
+            }
         });
+
+
 
     }
 
@@ -395,20 +371,24 @@ public class ReadActivity extends AppCompatActivity {
 
         try {
             // 閱讀紀錄
-            currentIndex = getSharedPreferences(bookName, MODE_PRIVATE).getInt("Index",0);
-            scrolled_histroy = getSharedPreferences(bookName, MODE_PRIVATE).getInt("Scrolled",0);
+            currentIndex = getSharedPreferences(bookID, MODE_PRIVATE).getInt("Index",0);
+            scrolled_history = getSharedPreferences(bookID, MODE_PRIVATE).getInt("Scrolled",0);
 
             // 偏好設定
-            text_size = getSharedPreferences("user_setting", MODE_PRIVATE).getInt("FontSize", 24);
-            switch_clock = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("Clock", true);
-            switch_darkmode = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("DarkMode", false);
+            text_size = settings_preferences.getInt("FontSize", 24);
+            switch_clock = settings_preferences.getBoolean("Clock", true);
+            switch_nightmode = settings_preferences.getBoolean("DarkMode", false);
+            switchClock.setChecked(switch_clock);
+            switchNightMode.setChecked(switch_nightmode);
+            textFontSizeValue.setText(String.valueOf(text_size));
+            applyClockVisibility(switch_clock);
+//            applyNightMode(switch_darkmode);
 
-            handler.sendEmptyMessage(4); //discharge textsize, darkmode, clock
 
         } catch (Exception e) {
             e.printStackTrace();
 //            saveHistory();
-            saveSetting();
+//            saveSetting();
         }
     }
 
@@ -423,7 +403,28 @@ public class ReadActivity extends AppCompatActivity {
 //            }
 //        }, 3000, 1000);
     }
+    private void updateFontSize() {
+        contentAdapter.setFontSize(text_size);
+        textFontSizeValue.setText(String.valueOf(text_size));
+        saveSetting("FontSize", text_size);
+        // 這裡可以應用到實際的閱讀內容
+    }
+    private void applyNightMode(boolean isEnabled) {
+        // 這裡可根據需求更改為適用於整個 App 的夜間模式
+        int targetNightMode = isEnabled ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+        int currentNightMode = AppCompatDelegate.getDefaultNightMode();
+        if (currentNightMode != targetNightMode) {
+            AppCompatDelegate.setDefaultNightMode(targetNightMode);
+            recreate();
+        }
+    }
+    private void applyClockVisibility(boolean isEnabled) {
+        if(isEnabled) {
+            clock.setVisibility(View.VISIBLE);
+        }else
+            clock.setVisibility(View.GONE);
 
+    }
     private void adLoad(){
 //        final InterstitialAd mInterstitialAd;
 //        AdRequest adRequest = new AdRequest.Builder().build();
@@ -448,64 +449,63 @@ public class ReadActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        loadingDialog = new ProgressDialog(this);
-        loadingDialog.setMessage("加載中");
-        loadingDialog.show();
 
         System.out.println("started readactivty");
-        bookName = Objects.requireNonNull(getIntent().getExtras()).getString("bookName");
+        bookID = Objects.requireNonNull(getIntent().getExtras()).getString("bookName");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.story_main);
 
         if(adOn)
             adLoad();
+        settings_preferences = getSharedPreferences("user_setting", MODE_PRIVATE);
 
-
-        long t1,t2;
-        t1 = System.currentTimeMillis();
         setupView();
-        t2 = System.currentTimeMillis();
-        System.out.println("view connet time:"+(t2-t1));
-
-        t1 = System.currentTimeMillis();
         setupListener();
-        t2 = System.currentTimeMillis();
-        System.out.println("listener setup time:"+(t2-t1));
-
-        t1 = System.currentTimeMillis();
         loadUserPref();
-        t2 = System.currentTimeMillis();
-        System.out.println("load pref time:"+(t2-t1));
 
-        book = new BookData(bookName,"0");
+        book = new BookData(bookID,"0");
         contentAdapter = new ContentAdapter(novelcontentList);
         novelcontentView.setAdapter(contentAdapter);
+        contentAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                runOnUiThread(() -> {
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                });
+            }
+        });
+
+        progressDialog.show();
+//        loadChapterList.run();
         new Thread(loadChapterList).start();
-        setSaveTimer();
+//        setSaveTimer();
     }
 
     public void saveHistory(){
         try{
-
-            getSharedPreferences(bookName, MODE_PRIVATE).edit()
+//            int scrolled = novelcontent_layoutManager.findViewByPosition(firstVisibleItem).getTop();
+            getSharedPreferences(bookID, MODE_PRIVATE).edit()
                     .putInt("Index", currentIndex)
-                    .putInt("Scrolled", storyScrollView.getScrollY())
-                    .apply();
-
-        }catch (Exception e){e.printStackTrace();}
-    }
-
-    public void saveSetting(){
-        try{
-
-            getSharedPreferences("user_setting", MODE_PRIVATE).edit()
-                    .putInt("FontSize", text_size)
-                    .putBoolean("DarkMode",switch_darkmode)
-                    .putBoolean("Clock",switch_clock)
+                    .putInt("Scrolled", novelcontent_layoutManager.findViewByPosition(currentIndex).getTop())
                     .apply();
         }catch (Exception e){e.printStackTrace();}
     }
 
+
+    private void saveSetting(String key, boolean value) {
+        SharedPreferences.Editor editor = settings_preferences.edit();
+        editor.putBoolean(key, value);
+        editor.apply();
+    }
+
+    private void saveSetting(String key, int value) {
+        SharedPreferences.Editor editor = settings_preferences.edit();
+        editor.putInt(key, value);
+        editor.apply();
+    }
     Runnable getStory = new Runnable(){
         @Override
         public void run() {
@@ -519,7 +519,7 @@ public class ReadActivity extends AppCompatActivity {
                 String html = fetchHtml(book.getBookURL());
                 Document doc = Jsoup.parse(html);
                 long endOkHttp = System.currentTimeMillis();
-                Log.d("ReadActivity","OkHttp + Jsoup 文章解析花費時間：" + (endOkHttp - startOkHttp) + "ms");
+                Log.d("ReadActivity", "OkHttp + Jsoup 文章解析花費時間：" + (endOkHttp - startOkHttp) + "ms");
 
                 Element novel_doc = doc.select("div.contents").first();
                 novel_doc.select("div").remove();
@@ -529,37 +529,63 @@ public class ReadActivity extends AppCompatActivity {
                 novel_content = novel_content.replaceAll("明智屋中文 wWw.MinGzw.Net 沒有彈窗,更新及時", "");
                 novel_content = novel_content.replaceAll("mayiwsk", "");
                 novel_content = novel_content.replaceAll("←→", "");
-
-
 //                saveHistory();
 
-            } catch (Exception e) {
+            } catch (SocketTimeoutException e) {
+                showToast("加載失敗，請確認網路環境");
+            }catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(ReadActivity.this, "加載失敗，請確認網路環境", Toast.LENGTH_LONG).show();
+                showToast("加載失敗，請確認網路環境");
             }
-            System.out.println("start send story message");
-            Handler handler = new Handler(Looper.getMainLooper());
-            if(!isLoadingPreviousChapter){
-                handler.postDelayed(() -> contentAdapter.insertNextChapter(currentIndex + 1, novel_content), 100);
-            }else
-                handler.postDelayed(() -> contentAdapter.insertPreviousChapter(currentIndex - 1, novel_content), 100);
-//                runOnUiThread(() -> contentAdapter.insertNextChapter(currentIndex+1,novel_content));
-//            else
-//                runOnUiThread(() -> contentAdapter.insertPreviousChapter(currentIndex-1,novel_content));
+            System.out.println("end load story message");
+            runOnUiThread(() -> {
+                if (isPreLoading) {
+                    if (isLoadingPreviousChapter) {
+                        contentAdapter.insertPreviousChapter(currentIndex - 1, novel_content);
+                    } else {
+                        contentAdapter.insertNextChapter(currentIndex + 1, novel_content);
+                    }
+                } else {
+                    contentAdapter.insertNextChapter(currentIndex, novel_content);
+                    novelcontentView.postDelayed(() -> {
+                        Log.d("ReadActivity", "===========scrollToPositionWithOffset");
+                        novelcontent_layoutManager.scrollToPositionWithOffset(
+                                novelcontent_layoutManager.findFirstVisibleItemPosition(), scrolled_history);
+                    },500);
+                }
+            });
+//            if(isPreLoading) {
+//                if (!isLoadingPreviousChapter) {
+////                handler.postDelayed(() -> contentAdapter.insertNextChapter(currentIndex + 1, novel_content), 100);
+//                    runOnUiThread(() -> contentAdapter.insertNextChapter(currentIndex + 1, novel_content));
+//                } else {
+////                handler.postDelayed(() -> contentAdapter.insertPreviousChapter(currentIndex - 1, novel_content), 100);
+//                    runOnUiThread(() -> contentAdapter.insertPreviousChapter(currentIndex - 1, novel_content));
+//                }
+//            }
+//            else {
+//                runOnUiThread(() -> contentAdapter.insertNextChapter(currentIndex, novel_content));
+//                novelcontentView.post(() -> {
+//                    Log.d("ReadActivity", "scrollToPositionWithOffset");
+//                    novelcontent_layoutManager.scrollToPositionWithOffset(novelcontent_layoutManager.findFirstVisibleItemPosition(), scrolled_history);
+//                });
+//            }
+//
+//
+//
             handler.postDelayed(() -> isLoading = false, 100);
-//            isLoading = false;
 
             Log.d("ReadActivity", "getStory: Data added to adapter, novelcontentList size: " + novelcontentList.size());
 //            handler.sendEmptyMessage(0);
         }
     };
 
-
     Runnable loadChapterList = new Runnable(){
         @Override
         public void run() {
                 //conn.header("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:32.0) Gecko/   20100101 FireFox/32.0");
-
+                if(!progressDialog.isShowing())
+                    progressDialog.show();
                 try {
 
                     long startOkHttp = System.currentTimeMillis();
@@ -567,20 +593,19 @@ public class ReadActivity extends AppCompatActivity {
                     long temp = System.currentTimeMillis();
                     Log.d("ReadActivity","OkHttp 章節解析花費時間：" + (temp - startOkHttp) + "ms");
 
-                    long startsc = System.currentTimeMillis();
-                    String html2 = fetchHtml("https://www.mingzw.net/mzwbook/41935.html");
-                    long endsc = System.currentTimeMillis();
-                    Log.d("ReadActivity","OkHttp SC章節解析花費時間：" + (endsc - startsc) + "ms");
-
                     Document doc = Jsoup.parse(html);
                     long endOkHttp = System.currentTimeMillis();
                     Log.d("ReadActivity","Jsoup 章節解析花費時間：" + (endOkHttp - temp) + "ms");
 
                     Elements chapterList_temp = doc.select("div.content.gclearfix > ul >li");
                     String chapter_id = chapterList_temp.get(currentIndex).select("a").attr("href").split("_")[1];
+
+                    runOnUiThread(() -> chapterName.setText(chapterList_temp.get(currentIndex).text()));
+
                     book.updateChapter(chapter_id);
-                    new Thread(getStory).start();
-                    chapterList = new ArrayList<>();
+//                    storyRead_thread = new Thread(getStory);
+//                    storyRead_thread.start();
+                    getStory.run();
                     for(int i=0; i< chapterList_temp.size()-2;i++)
                     {
                         chapterData = new ArrayList<>();
@@ -601,28 +626,80 @@ public class ReadActivity extends AppCompatActivity {
 
 
                     CAdapter = new ChapterListAdapter(chapterList,currentIndex);
-                    CAdapter.setItemClickListener(new ChapterListAdapter.OnRecyclerViewClickListener() {
-                        @Override
-                        public void onItemClickListener(View view) {
-                            // 重置滑動紀錄
-                            scrolled_histroy = 0;
-                            chapterListDrawer.closeDrawer(GravityCompat.START);
-                            currentIndex = chapterListViewR.getChildAdapterPosition(view);
-                            book.updateChapter(chapterList.get(currentIndex).get(1));
-                            new Thread(getStory).start();
-                            CAdapter.updateIndex(currentIndex);
-                        }
+                    CAdapter.setItemClickListener(view -> {
+                        progressDialog.show(); // 直接 show，不用切換到 UI Thread
+                        isUserScrolling =false;
+                        // 重置狀態
+                        scrolled_history = 0;
+                        chapterListDrawer.closeDrawer(GravityCompat.START);
+                        currentIndex = chapterListViewR.getChildAdapterPosition(view);
+                        book.updateChapter(chapterList.get(currentIndex).get(1));
+                        contentAdapter.clearChapterList(); // 先清除 RecyclerView 的內容
+                        Log.d("ReadActivity", "clicked item index:"+currentIndex);
+                        Log.d("ReadActivity", "clicked item name:"+chapterList.get(currentIndex).get(0));
+                        Log.d("ReadActivity", "clicked item id:"+chapterList.get(currentIndex).get(1));
 
-                        @Override
-                        public void onItemLongClickListener(View view) {
+                        // 改為 ExecutorService 處理異步爬蟲
+                        executorService.submit(() -> {
+                            try {
+                                // 讀取當前章節
+                                isPreLoading = false;
+                                isLoadingPreviousChapter = false;
+                                getStory.run(); // 直接執行 Runnable，不用手動 start()
 
-                        }
+                                // 回到 UI Thread 更新 RecyclerView
+                                handler.post(() -> {
+                                    Log.d("ReadActivity", "clicked item settext:"+chapterList.get(currentIndex).get(0));
+                                    chapterName.setText(chapterList.get(currentIndex).get(0));
+                                    CAdapter.updateIndex(currentIndex);
+                                });
+
+                                // **預加載前一章節**
+                                isPreLoading = true;
+                                isLoadingPreviousChapter = true;
+                                book.updateChapter(chapterList.get(currentIndex - 1).get(1));
+                                getStory.run();
+
+                                // 最後確保 UI 更新完後關閉 Dialog
+                                handler.post(() -> {
+                                    if (progressDialog.isShowing()) {
+                                        progressDialog.dismiss();
+                                    }
+                                });
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
                     });
 
 
+                } catch (SocketTimeoutException e) {
+                    showToast("加載失敗，請確認網路環境");
                 }catch (Exception e){e.printStackTrace();}
+            runOnUiThread(() -> chapterListViewR.setAdapter(CAdapter));
+            runOnUiThread(() -> chapterListViewR.scrollToPosition(currentIndex-1));
 
-            handler.sendEmptyMessage(1);
+
+            executorService.submit(() -> {
+                try {
+                    if (currentIndex > 0) {
+                        Log.d("ReadActivity", "preload previous chapter start.");
+                        isPreLoading = true;
+                        isLoadingPreviousChapter = true;
+                        book.updateChapter(chapterList.get(currentIndex - 1).get(1));
+                        getStory.run();
+                        Log.d("ReadActivity", "preload previous chapter done.");
+                        handler.post(() -> {
+                            if (progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                        });
+                    }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     };
 
@@ -637,7 +714,9 @@ public class ReadActivity extends AppCompatActivity {
         }
     };
 
-
+    private void showToast(String message) {
+        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
+    }
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
 //        saveHistory();
@@ -660,7 +739,7 @@ public class ReadActivity extends AppCompatActivity {
     private void ToQuitTheApp() {
         if (isExit) {
             // ACTION_MAIN with category CATEGORY_HOME 啟動主屏幕
-            saveTimer.cancel();
+//            saveTimer.cancel();
             this.finish();
         } else {
             isExit = true;
@@ -669,84 +748,6 @@ public class ReadActivity extends AppCompatActivity {
             handler.sendEmptyMessageDelayed(9, 3000);// 3秒後發送消息
         }
     }
-
-
-
-    @Override
-    public void finish() {
-
-        super.finish();
-        this.overridePendingTransition(R.anim.stay, R.anim.out);
-    }
-
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        if (isFinishing()){
-//            overridePendingTransition(R.anim.stay, R.anim.out);
-//        }
-//
-//    }
-
-    @SuppressLint("HandlerLeak")
-    Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-            try {
-                switch (msg.what) {
-
-                    case 0:
-//                        long t1,t2;
-//                        t1 = System.currentTimeMillis();
-//                        System.out.println("Start load story");
-//                        tv1.setText("\n\n\n");
-//                        tv1.append(novel_content);
-//                        t2= System.currentTimeMillis();
-//                        System.out.println("load story time: "+(t2-t1));
-//                        contentAdapter.addChapter(novel_content);
-//                        chapterName.setText(chapterList.get(currentIndex).get(0));
-//                        handler.sendEmptyMessageDelayed(5, 300);
-
-
-                        break;
-
-                    case 1:
-                        chapterListViewR.setAdapter(CAdapter);
-                        chapterListViewR.scrollToPosition(currentIndex);
-                        loadingDialog.dismiss();
-                        break;
-                    case 2:
-                        //bookCover.setImageBitmap(cover);
-                        break;
-                    case 3:
-//                        tv1.setVisibility(View.INVISIBLE);
-                        break;
-                    case 4:
-                        darkmodeSwitch.setChecked(switch_darkmode);
-                        clockSwitch.setChecked(switch_clock);
-//                        tv1.setTextSize(text_size);
-                        break;
-                    case 5:
-//                        storyScrollView.scrollTo(0, scrolled_histroy);
-//                        tv1.setVisibility(View.VISIBLE);
-
-                        break;
-
-                    case 9:
-                        isExit=false;
-                        break;
-                    default:
-                        break;
-
-                }
-
-
-            }catch (Exception e){e.printStackTrace();}
-
-        }
-    };
 
 
 }

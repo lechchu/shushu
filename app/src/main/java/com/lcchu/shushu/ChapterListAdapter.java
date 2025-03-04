@@ -35,21 +35,6 @@ public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.
         ViewHolder(View itemView) {
             super(itemView);
             txtItem = itemView.findViewById(R.id.txtItem);
-/*
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    System.out.println("clicked text");
-                    //holder.txtItem.setTextColor(Color.parseColor("#008577"));
-
-                    //txtItem.setBackgroundColor(Color.parseColor("#ffffff"));
-
-                    selectedItemIndex=getAdapterPosition();
-                    notifyDataSetChanged();
-                }
-            });
-
- */
         }
     }
 
@@ -67,28 +52,17 @@ public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.
             }
         });
 
-        view.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                listener.onItemLongClickListener(v);
-                return true;
-            }
-        });
-
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-
         //TODO 速度太慢
-
         holder.txtItem.setText(mData.get(position).get(0));
         if(position==selectedItemIndex)
             holder.txtItem.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorPrimary));
         else
             holder.txtItem.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.colorTextDefault));
-
     }
 
     public void updateIndex(int index){
@@ -102,7 +76,6 @@ public class ChapterListAdapter extends RecyclerView.Adapter<ChapterListAdapter.
 
     public interface OnRecyclerViewClickListener {
         void onItemClickListener(View view);
-        void onItemLongClickListener(View view);
     }
 
     @Override

@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,6 +41,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -175,6 +177,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        boolean isNightMode = getSharedPreferences("user_setting", MODE_PRIVATE).getBoolean("DarkMode", false);
+        int targetNightMode = isNightMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+        if (AppCompatDelegate.getDefaultNightMode() != targetNightMode) {
+            AppCompatDelegate.setDefaultNightMode(targetNightMode);
+            recreate();
+        }
         setContentView(R.layout.activity_main);
 
         initView();
@@ -297,7 +305,6 @@ public class MainActivity extends AppCompatActivity {
         public void run ( ) {
 
             try{
-                //TODO 抓分類小說
                 long t1,t2;
                 uiUpdateHandler.sendEmptyMessage(1);
 

@@ -15,11 +15,15 @@ import java.util.List;
 public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.ViewHolder>{
 
     private ArrayList<Pair<Integer, String>> novelList;
+    private int fontSize = 24;
 
     public ContentAdapter(ArrayList<Pair<Integer, String>> contents) {
         this.novelList = contents;
     }
-
+    public void setFontSize(int fontSize) {
+        this.fontSize = fontSize;
+        notifyItemRangeChanged(0, getItemCount());
+    }
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;
         public ViewHolder(View itemView) {
@@ -39,7 +43,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.textView.setText(novelList.get(position).second);
-//        Log.d("ContentAdapter", "=====onBindViewHolder: "+novelList.get(position).second);
+        holder.textView.setTextSize(fontSize);
     }
 
     @Override
@@ -58,8 +62,23 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.ViewHold
     }
 
     public void insertNextChapter(Integer newChapterID, String newChapterContent) {
-        novelList.add(new Pair<>(newChapterID, newChapterContent));
         Log.d("TAG", "insertNextChapter new size: "+novelList.size());
-        notifyItemInserted(novelList.size() - 1);
+        novelList.add(new Pair<>(newChapterID, newChapterContent));
+        if(!novelList.isEmpty())
+            notifyItemInserted(novelList.size() - 1);
+        else
+            notifyItemInserted(0);
+    }
+
+    public void clearChapterList(){
+        int size = novelList.size();
+
+        if(!novelList.isEmpty()) {
+            novelList.clear();
+            Log.d("ContentAdapter", "clearChapter, new size: " + novelList.size());
+            notifyItemRangeRemoved(0, size);
+        }else
+            Log.d("ContentAdapter", "novel item is not empty");
+
     }
 }

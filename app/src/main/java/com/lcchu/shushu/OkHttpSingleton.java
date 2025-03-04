@@ -17,6 +17,7 @@ public class OkHttpSingleton {
                     .protocols(Arrays.asList(Protocol.HTTP_2, Protocol.HTTP_1_1))
                     .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES)) // 設定連線池
                     .retryOnConnectionFailure(true) // 自動重試
+                    .connectTimeout(5, TimeUnit.SECONDS)
                     .build();
         }
         return client;
