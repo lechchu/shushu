@@ -10,13 +10,14 @@
 
     <ImageView
         android:id="@+id/fav_bookcoverIV"
-        android:layout_width="111sp"
-        android:layout_height="148sp"
-
+        android:layout_width="170sp"
+        android:layout_height="200sp"
+        android:layout_marginTop="16dp"
         android:adjustViewBounds="true"
         android:layout_centerHorizontal="true"
-        android:maxWidth="111sp"
-        android:maxHeight="148sp"
+        android:maxWidth="170sp"
+        android:maxHeight="200sp"
+        android:layout_marginStart="10dp"
         tools:ignore="MissingConstraints" />
 
         <TextView

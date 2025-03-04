@@ -10,19 +10,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
-    <TextClock
-        android:id="@+id/textclock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:textColor="@color/colorTextWhite"
-        android:visibility="gone"
-        android:format24Hour="h:mm"
-        android:textSize="15sp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="40dp" />
 
     <TextView
         android:id="@+id/chapternameView"

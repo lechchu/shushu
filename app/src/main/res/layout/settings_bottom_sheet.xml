@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorBackground"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 夜間模式開關 -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_night_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorText"
+        android:textSize="16sp"
+
+        android:text="夜間模式" />
+
+    <!-- 時鐘常駐開關 -->
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_clock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorText"
+        android:textSize="16sp"
+        android:text="時鐘常駐"
+/>
+
+    <!-- 字體大小調整 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- "字體大小" 標題 -->
+        <TextView
+            android:id="@+id/text_font_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="字體大小"
+            android:textSize="16sp"
+            android:textColor="@color/colorText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- 減小字體按鈕 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_decrease_font"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="-"
+            app:layout_constraintEnd_toStartOf="@id/text_font_size_value"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- 目前字體大小顯示 -->
+        <TextView
+            android:id="@+id/text_font_size_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="24"
+            android:textSize="24sp"
+            android:textColor="@color/colorText"
+            app:layout_constraintEnd_toStartOf="@id/button_increase_font"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- 增加字體按鈕 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_increase_font"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="+"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+<!--    style="@style/Widget.MaterialComponents.Button.OutlinedButton"-->
+
+
+</LinearLayout>

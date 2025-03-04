@@ -1,12 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBackground"
-    >
+    android:orientation="horizontal">
+    <TextView
+        android:id="@+id/chapternameView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:textColor="@color/colorTextWhite"
+        android:autoSizeTextType="uniform"
+        android:maxLines="1"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="15sp"
+        app:layout_constraintTop_toTopOf="parent"
+         />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/content_recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"/>
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/chapternameView"/>
+
+    <TextClock
+        android:id="@+id/textclock"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:format24Hour="h:mm"
+        android:textColor="@color/colorTextWhite"
+        android:textSize="15sp"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
